@@ -185,18 +185,20 @@ services:
 
 ---
 
-## Контракт `infra.json`
+## Self-hosting вьюера
 
-JSON Schema лежит в `src/inframap/schema/v1.json` (генерится из Pydantic-моделей). При релизе публикуется на `cop1cat.github.io/inframap/schema/v1.json`.
+Public-инстанс — на `cop1cat.github.io/inframap`. Если нужно держать у себя (security/compliance), есть Docker-образ и Helm-чарт:
 
-**Эволюция:**
-- `schema_version: 1` обязателен в каждом файле.
-- Breaking-изменение → новая мажорная версия. Старая поддерживается вьюером минимум год.
-- Добавление опциональных полей — не breaking.
+```bash
+# Docker
+cd viewer && docker compose up -d   # http://localhost:8080
 
-Сериализация детерминированная: массивы `groups`/`services`/`calls` сортируются по `id`, опциональные поля выписываются с `null`, порядок ключей в `tags`/`links` сохраняется как в YAML — это даёт воспроизводимые diff-ы в git.
+# Kubernetes
+helm install inframap deploy/helm/inframap-viewer \
+  --set ingress.host=inframap.internal.example.com
+```
 
----
+Подробнее — `deploy/README.md`. Вьюер чисто клиентский: данные не уходят за пределы браузера, поэтому self-host добавляет только контроль над тем, откуда раздаётся статика.
 
 ## Разработка
 
@@ -213,3 +215,5 @@ uv run mypy
 # обновить schema/v1.json после изменений в models.py
 uv run python -m inframap.schema_dump
 ```
+
+Вьюер живёт в `viewer/` — см. `viewer/README.md`.

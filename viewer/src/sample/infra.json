@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "meta": {
+    "title": "Sample Infrastructure",
+    "description": "Click around to see how it works"
+  },
+  "groups": [
+    { "id": "cloud", "label": "Cloud", "color": null, "parent": null },
+    { "id": "aws", "label": "AWS", "color": "#FF9900", "parent": "cloud" },
+    { "id": "gcp", "label": "GCP", "color": "#4285F4", "parent": "cloud" }
+  ],
+  "services": [
+    {
+      "id": "api-gateway",
+      "label": "API Gateway",
+      "group": "aws",
+      "description": "Public entry point",
+      "owner": "team-platform",
+      "tags": { "tier": "critical", "layer": "edge" },
+      "links": { "docs": "https://example.com/api" },
+      "calls": [
+        { "id": "auth", "type": "sync", "broken": false },
+        { "id": "billing", "type": "async", "broken": false },
+        { "id": "search", "type": "sync", "broken": false }
+      ]
+    },
+    {
+      "id": "auth",
+      "label": "Auth",
+      "group": "aws",
+      "description": "JWT issuer",
+      "owner": "team-platform",
+      "tags": { "tier": "critical" },
+      "links": {},
+      "calls": [
+        { "id": "users-db", "type": "sync", "broken": false }
+      ]
+    },
+    {
+      "id": "billing",
+      "label": "Billing",
+      "group": "aws",
+      "description": "Charges and invoices",
+      "owner": "team-billing",
+      "tags": { "tier": "critical" },
+      "links": {},
+      "calls": [
+        { "id": "events-bus", "type": "event", "broken": false },
+        { "id": "ghost-service", "type": "sync", "broken": true }
+      ]
+    },
+    {
+      "id": "search",
+      "label": "Search",
+      "group": "gcp",
+      "description": "Full-text search",
+      "owner": "team-data",
+      "tags": { "tier": "standard" },
+      "links": {},
+      "calls": [
+        { "id": "index-worker", "type": "async", "broken": false }
+      ]
+    },
+    {
+      "id": "users-db",
+      "label": "Users DB",
+      "group": "aws",
+      "description": "PostgreSQL primary",
+      "owner": "team-platform",
+      "tags": { "type": "database" },
+      "links": {},
+      "calls": []
+    },
+    {
+      "id": "events-bus",
+      "label": "Events Bus",
+      "group": "aws",
+      "description": null,
+      "owner": null,
+      "tags": {},
+      "links": {},
+      "calls": []
+    },
+    {
+      "id": "index-worker",
+      "label": "Index Worker",
+      "group": "gcp",
+      "description": "Reindex worker",
+      "owner": "team-data",
+      "tags": {},
+      "links": {},
+      "calls": [
+        { "id": "search", "type": "sync", "broken": false }
+      ]
+    }
+  ]
+}
