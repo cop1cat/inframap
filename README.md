@@ -1,46 +1,48 @@
 # InfraMap
 
-CLI-утилита: один YAML с описанием сервисов и групп → один `infra.json` для [вьюера](https://cop1cat.github.io/inframap).
+**English** · [Русский](README.ru.md)
 
-## Установка
+A CLI tool: one YAML describing services and groups → one `infra.json` for the [viewer](https://cop1cat.github.io/inframap).
 
-Из GitHub:
+## Install
+
+From GitHub:
 
 ```bash
-# uv (рекомендуется)
+# uv (recommended)
 uv tool install git+https://github.com/cop1cat/inframap
 
 # pip
 pip install git+https://github.com/cop1cat/inframap
 ```
 
-После установки доступна команда `inframap`.
+After install the `inframap` command is on your PATH.
 
-## Быстрый старт
+## Quick start
 
-1. Создай `infra.yaml` (см. ниже).
-2. Запусти `inframap generate infra.yaml` — получишь `infra.json`.
-3. Открой [вьюер](https://cop1cat.github.io/inframap) и перетащи файл в окно браузера.
+1. Write `infra.yaml` (see below).
+2. Run `inframap generate infra.yaml` — you get `infra.json`.
+3. Open the [viewer](https://cop1cat.github.io/inframap) and drop the file in.
 
 ```bash
 inframap generate infra.yaml                  # → ./infra.json
 inframap generate infra.yaml -o out.json
-inframap generate infra.yaml -o -             # вывод в stdout
-inframap generate infra.yaml --strict         # warnings → exit 2, JSON не пишется
+inframap generate infra.yaml -o -             # write to stdout
+inframap generate infra.yaml --strict         # warnings → exit 2, no JSON written
 
-inframap validate infra.yaml                  # только проверка
+inframap validate infra.yaml                  # validate only
 inframap validate infra.yaml --strict
 ```
 
-**Exit codes:** `0` — успех, `1` — ошибка валидации, `2` — есть warnings и `--strict`.
+**Exit codes:** `0` — success, `1` — validation error, `2` — warnings present and `--strict` was passed.
 
 ---
 
-## Как писать YAML
+## Writing the YAML
 
-YAML делится на три секции: `meta` (заголовок карты), `groups` (контейнеры) и `services` (сами сервисы и связи между ними). Все секции опциональны, но обычно нужны как минимум `services`.
+The YAML has three sections: `meta` (map title), `groups` (containers) and `services` (the services and their dependencies). All sections are optional, but you usually need at least `services`.
 
-### Минимальный пример
+### Minimal example
 
 ```yaml
 services:
@@ -50,29 +52,29 @@ services:
     label: Database
 ```
 
-Этого достаточно — два сервиса без связей. Но обычно ты захочешь описать больше.
+That's enough — two services, no relations. In practice you'll want more.
 
-### Полный пример
+### Full example
 
 ```yaml
 meta:
   title: "My Infrastructure"
-  description: "Карта продовых сервисов"
+  description: "Production services map"
 
 groups:
   - id: cloud
     label: Cloud
   - id: aws
     label: AWS
-    parent: cloud           # вложенная группа
-    color: "#FF9900"        # цвет для подсказки во вьюере
+    parent: cloud           # nested group
+    color: "#FF9900"        # hint colour for the viewer
 
 services:
   - id: api-gateway
     label: API Gateway
     kind: gateway
     group: aws
-    description: "Точка входа для всех клиентских запросов"
+    description: "Entry point for all client traffic"
     owner: team-platform
     tags:
       tier: critical
@@ -90,7 +92,7 @@ services:
   - id: auth-service
     label: Auth
     group: aws
-    description: "Аутентификация и выдача JWT"
+    description: "Issues and validates JWTs"
     owner: team-platform
     calls:
       - id: users-db
@@ -101,7 +103,7 @@ services:
   - id: billing-service
     label: Billing
     group: aws
-    description: "Списания и счета"
+    description: "Charges and invoices"
     owner: team-billing
     calls:
       - id: events-bus
@@ -127,125 +129,125 @@ services:
     label: Events Bus
     kind: queue
     group: aws
-    description: "Шина событий"
+    description: "Event bus"
     owner: team-platform
 
   - id: stripe
     label: Stripe
     kind: external
-    description: "Платёжный провайдер"
+    description: "Payment provider"
     owner: team-billing
     links:
       docs: https://stripe.com/docs/api
 ```
 
-### Секции по порядку
+### Sections in order
 
-#### `meta` — заголовок карты
+#### `meta` — map title
 
 ```yaml
 meta:
-  title: "My Infrastructure"      # отображается в шапке вьюера
-  description: "Optional"         # подзаголовок, можно опустить
+  title: "My Infrastructure"      # rendered in the viewer's header
+  description: "Optional"         # subtitle, can be omitted
 ```
 
-Если секции нет — заголовок будет «Infrastructure Map».
+If the section is absent, the title falls back to "Infrastructure Map".
 
-#### `groups` — контейнеры для сервисов
+#### `groups` — containers for services
 
-Группы нужны, чтобы визуально объединять сервисы (по облаку, команде, домену — как удобно).
+Groups visually cluster services (by cloud, team, domain — whatever makes sense).
 
 ```yaml
 groups:
-  - id: aws            # уникальный идентификатор
-    label: AWS         # человекочитаемое имя
-    color: "#FF9900"   # опционально: цвет рамки во вьюере
-    parent: cloud      # опционально: вложенность в другую группу
+  - id: aws            # unique id
+    label: AWS         # human-readable name
+    color: "#FF9900"   # optional: border colour in the viewer
+    parent: cloud      # optional: nest into another group
 ```
 
-**Вложенность:** не глубже 2 уровней. На большей глубине layout вьюера деградирует.
+**Nesting:** keep it within 2 levels. Deeper nesting starts to break the viewer's layout.
 
-#### `services` — сервисы и связи
+#### `services` — services and their dependencies
 
-Каждый сервис — это нода на графе. Поле `calls` описывает исходящие вызовы к другим сервисам (стрелки на графе).
+Each service is a node on the graph. `calls` describes outgoing dependencies (arrows on the graph).
 
 ```yaml
 services:
-  - id: api-gateway              # обязательно, уникально среди сервисов
-    label: API Gateway           # обязательно, отображается на ноде
-    kind: gateway                # опционально, по умолчанию service (см. ниже)
-    group: aws                   # опционально: в какую группу поместить
-    description: "..."           # опционально, но рекомендуется
-    owner: team-platform         # опционально, но рекомендуется
-    tags:                        # опционально: произвольные теги для фильтра
+  - id: api-gateway              # required, unique among services
+    label: API Gateway           # required, shown on the node
+    kind: gateway                # optional, defaults to service (see below)
+    group: aws                   # optional: which group to place it in
+    description: "..."           # optional but recommended
+    owner: team-platform         # optional but recommended
+    tags:                        # optional: arbitrary tags for filtering
       tier: critical
       layer: edge
-    links:                       # опционально: ссылки в tooltip
+    links:                       # optional: links shown in the tooltip
       docs: https://...
       repo: https://...
-    calls:                       # опционально: исходящие вызовы
-      - id: auth-service         # id сервиса, к которому идёт вызов
-        type: sync               # обязательно
+    calls:                       # optional: outgoing calls
+      - id: auth-service         # id of the called service
+        type: sync               # required
 ```
 
-**Виды сервисов (`kind`):**
+**Service kinds (`kind`):**
 
-| `kind`     | Что описывает                  | Как рисуется                  |
-|------------|--------------------------------|-------------------------------|
-| `service`  | обычный сервис (по умолчанию)  | кружок                        |
-| `database` | RDBMS, NoSQL                   | прямоугольник + 🗄            |
-| `cache`    | Redis, Memcached               | гексагон + ⚡                 |
-| `queue`    | Kafka, SQS, шина событий       | прямоугольник + 💬            |
-| `gateway`  | API gateway, edge              | ромб + 🚪                     |
-| `worker`   | бэкграунд-джобы                | квадрат + ⚙                  |
-| `external` | сторонний сервис               | пунктирный кружок + 🌐        |
-| `storage`  | S3, blob storage               | прямоугольник + 💾            |
-| `function` | lambda, edge function          | пятиугольник + ⚡             |
+| `kind`     | What it represents                | How it's drawn                |
+|------------|-----------------------------------|-------------------------------|
+| `service`  | regular service (default)         | circle                        |
+| `database` | RDBMS, NoSQL                      | rounded rectangle + 🗄        |
+| `cache`    | Redis, Memcached                  | hexagon + ⚡                  |
+| `queue`    | Kafka, SQS, event bus             | rounded rectangle + 💬        |
+| `gateway`  | API gateway, edge                 | diamond + 🚪                  |
+| `worker`   | background jobs                   | square + ⚙                   |
+| `external` | third-party service               | dashed circle + 🌐            |
+| `storage`  | S3, blob storage                  | rounded rectangle + 💾        |
+| `function` | lambda, edge function             | pentagon + ⚡                 |
 
-Поле опциональное. Если не указано — `service`. Это семантический хинт: автор пишет смысл, вьюер сам решает, как нарисовать.
+The field is optional and defaults to `service`. It's a semantic hint: you describe intent, the viewer decides how to draw it.
 
-**Типы вызовов (`type`):**
+**Call types (`type`):**
 
-| Значение  | Когда использовать                              | Как рисуется во вьюере |
-|-----------|-------------------------------------------------|------------------------|
-| `sync`    | HTTP/gRPC запрос-ответ, ждём результат          | Сплошная линия         |
-| `async`   | Вызов через очередь, отправил и забыл           | Пунктир                |
-| `event`   | Pub/sub события, шина, fan-out                  | Точечная линия         |
-| `unknown` | Не уверен — но связь точно есть                 | Серая линия            |
+| Value     | When to use                                     | How it's drawn |
+|-----------|-------------------------------------------------|----------------|
+| `sync`    | HTTP/gRPC request/response, you wait for result | Solid line     |
+| `async`   | Fire-and-forget over a queue                    | Dashed         |
+| `event`   | Pub/sub, bus, fan-out                           | Dotted         |
+| `unknown` | You're not sure, but the link exists            | Grey line      |
 
-Дефолта **нет**: тип нужно указать явно. Если не знаешь — пиши `unknown`, не оставляй пустым.
+There is **no default**: you have to pick one. If you don't know, write `unknown` — don't leave it blank.
 
-### Правила именования
+### Naming rules
 
-- **`id`** — только латиница в нижнем регистре, цифры и дефис: `^[a-z0-9][a-z0-9-]*$`. Примеры: `api-gateway`, `auth`, `svc-1`. Не подойдут: `API`, `auth_service`, `-leading-dash`.
-- **`kind`** — одно из значений из таблицы выше. Произвольные строки запрещены.
-- **`color`** — hex `#RRGGBB`: `#FF9900`, `#1a2b3c`. Короткие формы (`#f90`) и именованные цвета не поддерживаются.
-- **`links.*`** — должны быть валидными URL (`http://...` или `https://...`).
-- **`service.id`** и **`group.id`** живут в разных пространствах имён — можно назвать сервис и группу одинаково (хотя не рекомендуется ради читаемости).
+- **`id`** — lowercase Latin, digits and dashes: `^[a-z0-9][a-z0-9-]*$`. OK: `api-gateway`, `auth`, `svc-1`. Not OK: `API`, `auth_service`, `-leading-dash`.
+- **`kind`** — one of the values from the table above. Free-form strings are not allowed.
+- **`color`** — hex `#RRGGBB`: `#FF9900`, `#1a2b3c`. Short forms (`#f90`) and named colours are not supported.
+- **`links.*`** — must be valid URLs (`http://...` or `https://...`).
+- **`service.id`** and **`group.id`** live in separate namespaces — a service and a group can share an id, though it's discouraged for readability.
 
-### Что произойдёт при ошибках
+### What happens on errors
 
-`inframap` валидирует YAML до записи JSON. Падает с понятным сообщением, если:
+`inframap` validates the YAML before writing JSON. It exits with a clear message on:
 
-- Дублируются `id` среди сервисов или групп.
-- Один сервис вызывает один и тот же `id` дважды в `calls`.
-- Сервис ссылается на несуществующую группу.
-- Сервис вызывает сам себя.
-- Группа ссылается на несуществующий `parent`, на саму себя, или образует цикл (A→B→A и длиннее).
-- Нарушен формат `id`, `color` или URL.
+- Duplicate `id`s among services or groups.
+- The same `id` listed twice in a service's `calls`.
+- A service referring to a non-existent group.
+- A service calling itself.
+- A group with a non-existent `parent`, a self-parent, or a parent cycle (A→B→A or longer).
+- Invalid `id`, `color`, or URL format.
 
-**Warnings** (по умолчанию не падают, но отображаются; с `--strict` → exit 2):
+**Warnings** (don't fail by default; with `--strict` they cause exit 2):
 
-- Сервис вызывает несуществующий сервис → попадёт в JSON с `"broken": true`, во вьюере подсветится красным.
-- У сервиса нет `owner` или `description`.
+- A service calls a service that doesn't exist → the JSON marks it `"broken": true` and the viewer paints it red.
+- A service has no `owner` or no `description`.
 
-Циклы между сервисами в `calls` (A→B→A) — это **нормально**: реальные системы так и устроены.
+Cycles between services in `calls` (A→B→A) are **fine**: real systems work like that.
 
 ---
 
-## Self-hosting вьюера
+## Self-hosting the viewer
 
-Public-инстанс — на `cop1cat.github.io/inframap`. Если нужно держать у себя (security/compliance), есть Docker-образ и Helm-чарт:
+The public instance lives at `cop1cat.github.io/inframap`. If you need to host it yourself (security/compliance), there's a Docker image and a Helm chart:
 
 ```bash
 # Docker
@@ -256,9 +258,9 @@ helm install inframap deploy/helm/inframap-viewer \
   --set ingress.host=inframap.internal.example.com
 ```
 
-Подробнее — `deploy/README.md`. Вьюер чисто клиентский: данные не уходят за пределы браузера, поэтому self-host добавляет только контроль над тем, откуда раздаётся статика.
+See `deploy/README.md` for details. The viewer is purely client-side, so self-hosting only changes who serves the static bundle.
 
-## Разработка
+## Development
 
 ```bash
 git clone https://github.com/cop1cat/inframap
@@ -270,8 +272,8 @@ uv run pytest
 uv run ruff check .
 uv run mypy
 
-# обновить schema/v1.json после изменений в models.py
+# regenerate schema/v1.json after changes to models.py
 uv run python -m inframap.schema_dump
 ```
 
-Вьюер живёт в `viewer/` — см. `viewer/README.md`.
+The viewer lives in `viewer/` — see `viewer/README.md`.
