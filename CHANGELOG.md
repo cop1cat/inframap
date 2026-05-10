@@ -4,6 +4,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-10
+
+### Added
+
+- `Service.kind` (semantic, not visual): `service` (default), `database`, `cache`, `queue`, `gateway`, `worker`, `external`, `storage`, `function`. Drives shape and inline icon in the viewer; `By kind` breakdown in stats; `Kind` filter chip in search. Optional and additive — existing `infra.json` keeps rendering as before.
+- Reset-layout button: discards manual node positions for the current `infra.json` and re-runs the cose-bilkent layout without reload.
+- `meta.description` is now shown as a subtitle in the topbar.
+
+### Changed
+
+- Vite build splits into separate chunks: app code (~36 KB gzip), cytoscape vendor (~174 KB gzip), tippy. Caching survives app-only changes.
+- Viewer-side validation no longer drops events on a stuck hover tooltip; tooltip hides on tap, drag, and pointer leave.
+
+### Removed
+
+- `cytoscape-expand-collapse` dependency: the double-click conflict it caused outweighed the rarely-used collapse feature.
+
 ## [0.1.0] - 2026-05-10
 
 ### Added
@@ -23,5 +40,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Helm chart at `deploy/helm/inframap-viewer/` (Deployment, Service, Ingress, HPA, optional NetworkPolicy).
 - GitHub Actions: CI (pytest, ruff, mypy, schema sync, viewer build), Pages deploy on `v*` tags, GHCR image build.
 
-[Unreleased]: https://github.com/cop1cat/inframap/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/cop1cat/inframap/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/cop1cat/inframap/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/cop1cat/inframap/releases/tag/v0.1.0

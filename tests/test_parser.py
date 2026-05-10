@@ -49,7 +49,7 @@ def test_top_level_not_mapping(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize(
     "name",
-    ["bad_id_format.yaml", "bad_color.yaml", "bad_url.yaml"],
+    ["bad_id_format.yaml", "bad_color.yaml", "bad_url.yaml", "bad_kind.yaml"],
 )
 def test_pydantic_format_errors(invalid_dir: Path, name: str) -> None:
     with pytest.raises(ParseError, match="schema validation failed"):

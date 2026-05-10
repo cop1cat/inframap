@@ -70,6 +70,7 @@ groups:
 services:
   - id: api-gateway
     label: API Gateway
+    kind: gateway
     group: aws
     description: "Точка входа для всех клиентских запросов"
     owner: team-platform
@@ -91,12 +92,51 @@ services:
     group: aws
     description: "Аутентификация и выдача JWT"
     owner: team-platform
+    calls:
+      - id: users-db
+        type: sync
+      - id: sessions-cache
+        type: sync
 
   - id: billing-service
     label: Billing
     group: aws
     description: "Списания и счета"
     owner: team-billing
+    calls:
+      - id: events-bus
+        type: event
+      - id: stripe
+        type: sync
+
+  - id: users-db
+    label: Users DB
+    kind: database
+    group: aws
+    description: "PostgreSQL primary"
+    owner: team-platform
+
+  - id: sessions-cache
+    label: Sessions
+    kind: cache
+    group: aws
+    description: "Redis cluster"
+    owner: team-platform
+
+  - id: events-bus
+    label: Events Bus
+    kind: queue
+    group: aws
+    description: "Шина событий"
+    owner: team-platform
+
+  - id: stripe
+    label: Stripe
+    kind: external
+    description: "Платёжный провайдер"
+    owner: team-billing
+    links:
+      docs: https://stripe.com/docs/api
 ```
 
 ### Секции по порядку
@@ -133,6 +173,7 @@ groups:
 services:
   - id: api-gateway              # обязательно, уникально среди сервисов
     label: API Gateway           # обязательно, отображается на ноде
+    kind: gateway                # опционально, по умолчанию service (см. ниже)
     group: aws                   # опционально: в какую группу поместить
     description: "..."           # опционально, но рекомендуется
     owner: team-platform         # опционально, но рекомендуется
@@ -146,6 +187,22 @@ services:
       - id: auth-service         # id сервиса, к которому идёт вызов
         type: sync               # обязательно
 ```
+
+**Виды сервисов (`kind`):**
+
+| `kind`     | Что описывает                  | Как рисуется                  |
+|------------|--------------------------------|-------------------------------|
+| `service`  | обычный сервис (по умолчанию)  | кружок                        |
+| `database` | RDBMS, NoSQL                   | прямоугольник + 🗄            |
+| `cache`    | Redis, Memcached               | гексагон + ⚡                 |
+| `queue`    | Kafka, SQS, шина событий       | прямоугольник + 💬            |
+| `gateway`  | API gateway, edge              | ромб + 🚪                     |
+| `worker`   | бэкграунд-джобы                | квадрат + ⚙                  |
+| `external` | сторонний сервис               | пунктирный кружок + 🌐        |
+| `storage`  | S3, blob storage               | прямоугольник + 💾            |
+| `function` | lambda, edge function          | пятиугольник + ⚡             |
+
+Поле опциональное. Если не указано — `service`. Это семантический хинт: автор пишет смысл, вьюер сам решает, как нарисовать.
 
 **Типы вызовов (`type`):**
 
@@ -161,6 +218,7 @@ services:
 ### Правила именования
 
 - **`id`** — только латиница в нижнем регистре, цифры и дефис: `^[a-z0-9][a-z0-9-]*$`. Примеры: `api-gateway`, `auth`, `svc-1`. Не подойдут: `API`, `auth_service`, `-leading-dash`.
+- **`kind`** — одно из значений из таблицы выше. Произвольные строки запрещены.
 - **`color`** — hex `#RRGGBB`: `#FF9900`, `#1a2b3c`. Короткие формы (`#f90`) и именованные цвета не поддерживаются.
 - **`links.*`** — должны быть валидными URL (`http://...` или `https://...`).
 - **`service.id`** и **`group.id`** живут в разных пространствах имён — можно назвать сервис и группу одинаково (хотя не рекомендуется ради читаемости).

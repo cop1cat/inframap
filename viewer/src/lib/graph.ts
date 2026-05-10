@@ -1,6 +1,7 @@
 import cytoscape, { type Core, type ElementDefinition } from "cytoscape";
 import "./cy-extensions";
-import type { InfraJson } from "../types";
+import type { InfraJson, ServiceKind } from "../types";
+import { KIND_STYLES, iconDataUri, styleForKind } from "./kinds";
 
 export function buildElements(infra: InfraJson): ElementDefinition[] {
   const elements: ElementDefinition[] = [];
@@ -21,19 +22,21 @@ export function buildElements(infra: InfraJson): ElementDefinition[] {
   }
 
   for (const s of infra.services) {
+    const kind: ServiceKind = (s.kind as ServiceKind | undefined) ?? "service";
     elements.push({
       group: "nodes",
       data: {
         id: s.id,
         label: s.label,
-        kind: "service",
+        nodeKind: "service",
+        kind,
         owner: s.owner,
         description: s.description,
         tags: s.tags,
         links: s.links,
         ...(s.group ? { parent: s.group } : {}),
       },
-      classes: "service",
+      classes: `service kind-${kind}`,
     });
   }
 
@@ -48,7 +51,8 @@ export function buildElements(infra: InfraJson): ElementDefinition[] {
           data: {
             id: c.id,
             label: c.id,
-            kind: "ghost",
+            nodeKind: "ghost",
+            kind: "service",
           },
           classes: "service ghost",
         });
@@ -114,6 +118,25 @@ function readThemeColors(): ThemeColors {
 
 type Stylesheet = { selector: string; style: Record<string, unknown> };
 
+function kindStyles(c: ThemeColors): Stylesheet[] {
+  const out: Stylesheet[] = [];
+  for (const [kind, ks] of Object.entries(KIND_STYLES)) {
+    out.push({
+      selector: `node.kind-${kind}`,
+      style: {
+        shape: ks.shape,
+        width: ks.width,
+        height: ks.height,
+        "border-style": ks.borderStyle,
+        ...(ks.icon
+          ? { "background-image": iconDataUri(ks.icon, c.text) }
+          : {}),
+      },
+    });
+  }
+  return out;
+}
+
 function buildStylesheet(c: ThemeColors): Stylesheet[] {
   return [
     {
@@ -147,9 +170,18 @@ function buildStylesheet(c: ThemeColors): Stylesheet[] {
       selector: "node.service",
       style: {
         shape: "ellipse",
-        width: 26,
-        height: 26,
+        width: 30,
+        height: 30,
         "background-color": c.nodeBg,
+        "background-opacity": 1,
+        "background-image-opacity": 1,
+        "background-fit": "none",
+        "background-clip": "none",
+        "background-image-containment": "inside",
+        "background-width": 14,
+        "background-height": 14,
+        "background-position-x": "50%",
+        "background-position-y": "50%",
         "border-width": 1.5,
         "border-color": c.nodeBorder,
         label: "data(label)",
@@ -161,6 +193,7 @@ function buildStylesheet(c: ThemeColors): Stylesheet[] {
         "min-zoomed-font-size": 6,
       },
     },
+    ...kindStyles(c),
     {
       selector: "edge",
       style: {
@@ -294,6 +327,10 @@ export function createGraph(
 export function updateGraph(cy: Core, infra: InfraJson): void {
   cy.elements().remove();
   cy.add(buildElements(infra));
+  cy.layout(layoutOptions).run();
+}
+
+export function relayout(cy: Core): void {
   cy.layout(layoutOptions).run();
 }
 

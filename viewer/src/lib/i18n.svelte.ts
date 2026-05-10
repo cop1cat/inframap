@@ -41,12 +41,14 @@ const dict = {
     "filter.owner": "Owner",
     "filter.group": "Group",
     "filter.tag": "Tag",
+    "filter.kind": "Kind",
 
     "stats.title": "Stats",
     "stats.services": "Services",
     "stats.groups": "Groups",
     "stats.calls": "Calls",
     "stats.byCallType": "By call type",
+    "stats.byKind": "By kind",
     "stats.broken": "Broken links",
     "stats.withoutOwner": "Without owner",
     "stats.withoutDescription": "Without description",
@@ -56,6 +58,7 @@ const dict = {
 
     "service.owner": "Owner",
     "service.group": "Group",
+    "service.kind": "Kind",
     "service.tags": "Tags",
     "service.links": "Links",
     "service.calls": "Calls",
@@ -71,6 +74,7 @@ const dict = {
     "zoom.out": "Zoom out",
     "zoom.fit": "Fit to screen",
     "zoom.minimap": "Toggle minimap",
+    "zoom.reset": "Reset layout (discard manual positions)",
 
     "help.title": "Keyboard & Mouse",
     "help.mouse": "Mouse",
@@ -122,12 +126,14 @@ const dict = {
     "filter.owner": "Владелец",
     "filter.group": "Группа",
     "filter.tag": "Тег",
+    "filter.kind": "Вид",
 
     "stats.title": "Статистика",
     "stats.services": "Сервисов",
     "stats.groups": "Групп",
     "stats.calls": "Вызовов",
     "stats.byCallType": "По типу вызова",
+    "stats.byKind": "По виду",
     "stats.broken": "Битые связи",
     "stats.withoutOwner": "Без владельца",
     "stats.withoutDescription": "Без описания",
@@ -137,6 +143,7 @@ const dict = {
 
     "service.owner": "Владелец",
     "service.group": "Группа",
+    "service.kind": "Вид",
     "service.tags": "Теги",
     "service.links": "Ссылки",
     "service.calls": "Вызывает",
@@ -152,6 +159,7 @@ const dict = {
     "zoom.out": "Отдалить",
     "zoom.fit": "По размеру экрана",
     "zoom.minimap": "Показать/скрыть мини-карту",
+    "zoom.reset": "Сбросить раскладку (забыть ручные позиции)",
 
     "help.title": "Управление",
     "help.mouse": "Мышь",

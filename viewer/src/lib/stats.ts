@@ -1,4 +1,4 @@
-import type { CallType, InfraJson } from "../types";
+import type { CallType, InfraJson, ServiceKind } from "../types";
 
 export interface BrokenLink {
   from: string;
@@ -21,6 +21,7 @@ export interface Stats {
   totalGroups: number;
   totalCalls: number;
   byCallType: Record<CallType, number>;
+  byKind: Partial<Record<ServiceKind, number>>;
   brokenLinks: BrokenLink[];
   withoutOwner: string[];
   withoutDescription: string[];
@@ -40,6 +41,7 @@ export function computeStats(infra: InfraJson): Stats {
   const withoutDescription: string[] = [];
   const ownerCounts = new Map<string, number>();
   const groupCounts = new Map<string, number>();
+  const byKind: Partial<Record<ServiceKind, number>> = {};
   let totalCalls = 0;
 
   for (const s of infra.services) {
@@ -47,6 +49,8 @@ export function computeStats(infra: InfraJson): Stats {
     if (!s.description) withoutDescription.push(s.id);
     if (s.owner) ownerCounts.set(s.owner, (ownerCounts.get(s.owner) ?? 0) + 1);
     if (s.group) groupCounts.set(s.group, (groupCounts.get(s.group) ?? 0) + 1);
+    const kind: ServiceKind = s.kind ?? "service";
+    byKind[kind] = (byKind[kind] ?? 0) + 1;
     for (const c of s.calls) {
       byCallType[c.type]++;
       totalCalls++;
@@ -68,6 +72,7 @@ export function computeStats(infra: InfraJson): Stats {
     totalGroups: infra.groups.length,
     totalCalls,
     byCallType,
+    byKind,
     brokenLinks,
     withoutOwner,
     withoutDescription,

@@ -19,6 +19,24 @@ class CallType(StrEnum):
     UNKNOWN = "unknown"
 
 
+class ServiceKind(StrEnum):
+    """Semantic kind of a service. Drives how the viewer renders it.
+
+    Adding a new value is a non-breaking change as long as the viewer falls
+    back to a sensible default for unknown kinds.
+    """
+
+    SERVICE = "service"
+    DATABASE = "database"
+    CACHE = "cache"
+    QUEUE = "queue"
+    GATEWAY = "gateway"
+    WORKER = "worker"
+    EXTERNAL = "external"
+    STORAGE = "storage"
+    FUNCTION = "function"
+
+
 class _Strict(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=False)
 
@@ -31,6 +49,7 @@ class ServiceCall(_Strict):
 class Service(_Strict):
     id: IdStr
     label: str
+    kind: ServiceKind = ServiceKind.SERVICE
     group: IdStr | None = None
     description: str | None = None
     owner: str | None = None

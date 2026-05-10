@@ -120,6 +120,10 @@
           "title": "Id",
           "type": "string"
         },
+        "kind": {
+          "$ref": "#/$defs/ServiceKind",
+          "default": "service"
+        },
         "label": {
           "title": "Label",
           "type": "string"
@@ -179,6 +183,22 @@
       ],
       "title": "ServiceCall",
       "type": "object"
+    },
+    "ServiceKind": {
+      "description": "Semantic kind of a service. Drives how the viewer renders it.\n\nAdding a new value is a non-breaking change as long as the viewer falls\nback to a sensible default for unknown kinds.",
+      "enum": [
+        "service",
+        "database",
+        "cache",
+        "queue",
+        "gateway",
+        "worker",
+        "external",
+        "storage",
+        "function"
+      ],
+      "title": "ServiceKind",
+      "type": "string"
     }
   },
   "$id": "https://cop1cat.github.io/inframap/schema/v1.json",

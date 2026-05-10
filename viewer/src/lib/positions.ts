@@ -68,6 +68,14 @@ export function readPositions(cy: Core): Positions {
   return out;
 }
 
+export function clearPositions(key: string): void {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // ignore
+  }
+}
+
 export function attachPositionPersistence(cy: Core, key: string): () => void {
   let timer: number | null = null;
   const schedule = () => {

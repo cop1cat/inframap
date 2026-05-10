@@ -7,7 +7,6 @@
       "dependencies": {
         "cytoscape": "^3.30.0",
         "cytoscape-cose-bilkent": "^4.1.0",
-        "cytoscape-expand-collapse": "^4.1.1",
         "cytoscape-navigator": "^2.0.2",
         "cytoscape-svg": "^0.4.0",
         "lucide-svelte": "^0.460.0",
@@ -162,8 +161,6 @@
     "cytoscape": ["cytoscape@3.33.3", "", {}, "sha512-Gej7U+OKR+LZ8kvX7rb2HhCYJ0IhvEFsnkud4SB1PR+BUY/TsSO0dmOW59WEVLu51b1Rm+gQRKoz4bLYxGSZ2g=="],
 
     "cytoscape-cose-bilkent": ["cytoscape-cose-bilkent@4.1.0", "", { "dependencies": { "cose-base": "^1.0.0" }, "peerDependencies": { "cytoscape": "^3.2.0" } }, "sha512-wgQlVIUJF13Quxiv5e1gstZ08rnZj2XaLHGoFMYXz7SkNfCDOOteKBE6SYRfA9WxxI/iBc3ajfDoc6hb/MRAHQ=="],
-
-    "cytoscape-expand-collapse": ["cytoscape-expand-collapse@4.1.1", "", { "peerDependencies": { "cytoscape": "^3.3.0" } }, "sha512-MI4/GsA6Rf6RRzNR1aCitBLSnxiIKLxvZyCzF+oti/zn/ui1jmf769VcEFAEbjjsAtwteGsTmczI+niCMWJNvA=="],
 
     "cytoscape-navigator": ["cytoscape-navigator@2.0.2", "", { "peerDependencies": { "cytoscape": "^2.6.0 || ^3.0.0" } }, "sha512-TZFBLFWEMW858UOt4rzusOjtDj7YT5vNx2uCwpUuicUYbaWCHHcUROBZWO+hiuSPWpVhvGLFlOq3NBcAVYOAgw=="],
 

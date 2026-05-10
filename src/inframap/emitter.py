@@ -16,6 +16,7 @@ def _service_dict(s: Service, service_ids: set[str]) -> dict[str, Any]:
     return {
         "id": s.id,
         "label": s.label,
+        "kind": s.kind.value,
         "group": s.group,
         "description": s.description,
         "owner": s.owner,

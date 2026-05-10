@@ -7,5 +7,19 @@ export default defineConfig({
   build: {
     outDir: "dist",
     target: "es2022",
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          cytoscape: [
+            "cytoscape",
+            "cytoscape-cose-bilkent",
+            "cytoscape-svg",
+            "cytoscape-navigator",
+          ],
+          tippy: ["tippy.js"],
+        },
+      },
+    },
   },
 });

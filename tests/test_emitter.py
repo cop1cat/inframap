@@ -28,6 +28,10 @@ def test_minimal_emit(valid_dir: Path) -> None:
     call_ids = [c["id"] for c in api["calls"]]
     assert call_ids == sorted(call_ids)
     assert all(c["broken"] is False for c in api["calls"])
+    assert api["kind"] == "gateway"
+
+    auth = next(s for s in payload["services"] if s["id"] == "auth-service")
+    assert auth["kind"] == "service"
 
 
 def test_broken_call_marked() -> None:

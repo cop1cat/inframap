@@ -12,7 +12,8 @@
   let selectedOwners = $state<string[]>([]);
   let selectedGroups = $state<string[]>([]);
   let selectedTags = $state<string[]>([]);
-  let openMenu = $state<"owner" | "group" | "tag" | null>(null);
+  let selectedKinds = $state<string[]>([]);
+  let openMenu = $state<"owner" | "group" | "tag" | "kind" | null>(null);
 
   const owners = $derived(
     [...new Set(infra.services.map((s) => s.owner).filter((o): o is string => !!o))].sort(),
@@ -27,6 +28,9 @@
     }
     return [...set].sort();
   });
+  const kinds = $derived(
+    [...new Set(infra.services.map((s) => s.kind ?? "service"))].sort(),
+  );
 
   function toggle(list: string[], v: string): string[] {
     return list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
@@ -50,6 +54,9 @@
       const have = new Set(Object.entries(s.tags).map(([k, v]) => `${k}:${v}`));
       if (!selectedTags.every((tg) => have.has(tg))) return false;
     }
+    if (selectedKinds.length > 0) {
+      if (!selectedKinds.includes(s.kind ?? "service")) return false;
+    }
     return true;
   }
 
@@ -64,7 +71,8 @@
       q.length > 0 ||
       selectedOwners.length > 0 ||
       selectedGroups.length > 0 ||
-      selectedTags.length > 0;
+      selectedTags.length > 0 ||
+      selectedKinds.length > 0;
     if (!hasFilters) {
       onMatch([]);
       return;
@@ -77,7 +85,7 @@
 
   $effect(() => {
     // re-run on any filter change
-    void [query, selectedOwners, selectedGroups, selectedTags];
+    void [query, selectedOwners, selectedGroups, selectedTags, selectedKinds];
     recompute();
   });
 
@@ -86,11 +94,12 @@
     selectedOwners = [];
     selectedGroups = [];
     selectedTags = [];
+    selectedKinds = [];
     openMenu = null;
   }
 
   const filterCount = $derived(
-    selectedOwners.length + selectedGroups.length + selectedTags.length,
+    selectedOwners.length + selectedGroups.length + selectedTags.length + selectedKinds.length,
   );
 </script>
 
@@ -158,6 +167,25 @@
           </label>
         {/each}
         {#if tags().length === 0}<span class="empty">—</span>{/if}
+      </div>
+    {/if}
+  </div>
+
+  <div class="filter">
+    <button
+      class:active={selectedKinds.length > 0}
+      onclick={() => (openMenu = openMenu === "kind" ? null : "kind")}
+    >
+      {t("filter.kind")}{selectedKinds.length > 0 ? ` (${selectedKinds.length})` : ""}
+    </button>
+    {#if openMenu === "kind"}
+      <div class="menu">
+        {#each kinds as k}
+          <label>
+            <input type="checkbox" checked={selectedKinds.includes(k)} onchange={() => (selectedKinds = toggle(selectedKinds, k))} />
+            <code>{k}</code>
+          </label>
+        {/each}
       </div>
     {/if}
   </div>
