@@ -1,0 +1,10 @@
+groups:
+  - id: a
+    label: A
+    parent: b
+  - id: b
+    label: B
+    parent: c
+  - id: c
+    label: C
+    parent: a

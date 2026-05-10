@@ -1,0 +1,4 @@
+groups:
+  - id: g
+    label: G
+    color: "not-a-color"

@@ -1,0 +1,10 @@
+services:
+  - id: a
+    label: A
+    calls:
+      - id: b
+        type: sync
+      - id: b
+        type: async
+  - id: b
+    label: B

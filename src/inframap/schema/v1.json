@@ -1,0 +1,209 @@
+{
+  "$defs": {
+    "CallType": {
+      "enum": [
+        "sync",
+        "async",
+        "event",
+        "unknown"
+      ],
+      "title": "CallType",
+      "type": "string"
+    },
+    "Group": {
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "anyOf": [
+            {
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Color"
+        },
+        "id": {
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z0-9][a-z0-9-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent"
+        }
+      },
+      "required": [
+        "id",
+        "label"
+      ],
+      "title": "Group",
+      "type": "object"
+    },
+    "Meta": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "title": {
+          "default": "Infrastructure Map",
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "title": "Meta",
+      "type": "object"
+    },
+    "Service": {
+      "additionalProperties": false,
+      "properties": {
+        "calls": {
+          "items": {
+            "$ref": "#/$defs/ServiceCall"
+          },
+          "title": "Calls",
+          "type": "array"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "group": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z0-9][a-z0-9-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Group"
+        },
+        "id": {
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "links": {
+          "additionalProperties": {
+            "format": "uri",
+            "maxLength": 2083,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Links",
+          "type": "object"
+        },
+        "owner": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Owner"
+        },
+        "tags": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "label"
+      ],
+      "title": "Service",
+      "type": "object"
+    },
+    "ServiceCall": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/CallType"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "ServiceCall",
+      "type": "object"
+    }
+  },
+  "$id": "https://cop1cat.github.io/inframap/schema/v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "groups": {
+      "items": {
+        "$ref": "#/$defs/Group"
+      },
+      "title": "Groups",
+      "type": "array"
+    },
+    "meta": {
+      "$ref": "#/$defs/Meta"
+    },
+    "services": {
+      "items": {
+        "$ref": "#/$defs/Service"
+      },
+      "title": "Services",
+      "type": "array"
+    }
+  },
+  "title": "InfraMap v1",
+  "type": "object",
+  "x-schema-version": 1
+}

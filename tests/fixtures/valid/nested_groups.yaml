@@ -1,0 +1,16 @@
+groups:
+  - id: cloud
+    label: Cloud
+  - id: aws
+    label: AWS
+    parent: cloud
+  - id: prod
+    label: Prod
+    parent: aws
+
+services:
+  - id: svc-a
+    label: A
+    group: prod
+    description: x
+    owner: team

@@ -1,0 +1,5 @@
+services:
+  - id: a
+    label: A
+    links:
+      docs: "not a url"
