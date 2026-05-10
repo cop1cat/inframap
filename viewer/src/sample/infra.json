@@ -13,6 +13,7 @@
     {
       "id": "api-gateway",
       "label": "API Gateway",
+      "kind": "gateway",
       "group": "aws",
       "description": "Public entry point",
       "owner": "team-platform",
@@ -27,18 +28,21 @@
     {
       "id": "auth",
       "label": "Auth",
+      "kind": "service",
       "group": "aws",
       "description": "JWT issuer",
       "owner": "team-platform",
       "tags": { "tier": "critical" },
       "links": {},
       "calls": [
-        { "id": "users-db", "type": "sync", "broken": false }
+        { "id": "users-db", "type": "sync", "broken": false },
+        { "id": "sessions-cache", "type": "sync", "broken": false }
       ]
     },
     {
       "id": "billing",
       "label": "Billing",
+      "kind": "service",
       "group": "aws",
       "description": "Charges and invoices",
       "owner": "team-billing",
@@ -46,34 +50,50 @@
       "links": {},
       "calls": [
         { "id": "events-bus", "type": "event", "broken": false },
+        { "id": "stripe", "type": "sync", "broken": false },
         { "id": "ghost-service", "type": "sync", "broken": true }
       ]
     },
     {
       "id": "search",
       "label": "Search",
+      "kind": "service",
       "group": "gcp",
       "description": "Full-text search",
       "owner": "team-data",
       "tags": { "tier": "standard" },
       "links": {},
       "calls": [
-        { "id": "index-worker", "type": "async", "broken": false }
+        { "id": "index-worker", "type": "async", "broken": false },
+        { "id": "search-storage", "type": "sync", "broken": false }
       ]
     },
     {
       "id": "users-db",
       "label": "Users DB",
+      "kind": "database",
       "group": "aws",
       "description": "PostgreSQL primary",
       "owner": "team-platform",
-      "tags": { "type": "database" },
+      "tags": { "tier": "critical" },
+      "links": {},
+      "calls": []
+    },
+    {
+      "id": "sessions-cache",
+      "label": "Sessions",
+      "kind": "cache",
+      "group": "aws",
+      "description": "Redis cluster",
+      "owner": "team-platform",
+      "tags": {},
       "links": {},
       "calls": []
     },
     {
       "id": "events-bus",
       "label": "Events Bus",
+      "kind": "queue",
       "group": "aws",
       "description": null,
       "owner": null,
@@ -84,6 +104,7 @@
     {
       "id": "index-worker",
       "label": "Index Worker",
+      "kind": "worker",
       "group": "gcp",
       "description": "Reindex worker",
       "owner": "team-data",
@@ -92,6 +113,28 @@
       "calls": [
         { "id": "search", "type": "sync", "broken": false }
       ]
+    },
+    {
+      "id": "search-storage",
+      "label": "Search Index",
+      "kind": "storage",
+      "group": "gcp",
+      "description": "GCS bucket",
+      "owner": "team-data",
+      "tags": {},
+      "links": {},
+      "calls": []
+    },
+    {
+      "id": "stripe",
+      "label": "Stripe",
+      "kind": "external",
+      "group": null,
+      "description": "Payment processor",
+      "owner": "team-billing",
+      "tags": {},
+      "links": { "docs": "https://stripe.com/docs/api" },
+      "calls": []
     }
   ]
 }

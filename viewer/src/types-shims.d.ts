@@ -5,4 +5,3 @@ declare module "cytoscape-cose-bilkent";
 declare module "cytoscape-svg";
 declare module "cytoscape-navigator";
 declare module "cytoscape-navigator/cytoscape.js-navigator.css";
-declare module "cytoscape-expand-collapse";

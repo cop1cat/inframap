@@ -65,6 +65,10 @@
       <dt>{t("service.group")}</dt>
       <dd><code>{service.group}</code></dd>
     {/if}
+    {#if service.kind && service.kind !== "service"}
+      <dt>{t("service.kind")}</dt>
+      <dd><code>{service.kind}</code></dd>
+    {/if}
   </dl>
 
   {#if tags.length > 0}

@@ -28,6 +28,15 @@
     {/each}
   </section>
 
+  {#if Object.keys(stats.byKind).length > 0}
+    <section>
+      <h3>{t("stats.byKind")}</h3>
+      {#each Object.entries(stats.byKind) as [kind, count]}
+        <div class="kv"><span>{kind}</span><b>{count}</b></div>
+      {/each}
+    </section>
+  {/if}
+
   {#if stats.brokenLinks.length > 0}
     <section>
       <h3 class="warn">{t("stats.broken")} ({stats.brokenLinks.length})</h3>

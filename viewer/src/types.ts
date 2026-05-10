@@ -1,5 +1,28 @@
 export type CallType = "sync" | "async" | "event" | "unknown";
 
+export type ServiceKind =
+  | "service"
+  | "database"
+  | "cache"
+  | "queue"
+  | "gateway"
+  | "worker"
+  | "external"
+  | "storage"
+  | "function";
+
+export const SERVICE_KINDS: readonly ServiceKind[] = [
+  "service",
+  "database",
+  "cache",
+  "queue",
+  "gateway",
+  "worker",
+  "external",
+  "storage",
+  "function",
+] as const;
+
 export interface ServiceCall {
   id: string;
   type: CallType;
@@ -9,6 +32,7 @@ export interface ServiceCall {
 export interface Service {
   id: string;
   label: string;
+  kind: ServiceKind;
   group: string | null;
   description: string | null;
   owner: string | null;

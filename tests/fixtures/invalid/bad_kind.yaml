@@ -1,0 +1,4 @@
+services:
+  - id: a
+    label: A
+    kind: not-a-real-kind

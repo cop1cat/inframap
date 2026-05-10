@@ -2,10 +2,11 @@
   import { onMount, untrack } from "svelte";
   import type { Core } from "cytoscape";
   import type { InfraJson } from "./types";
-  import { applyThemeColors, createGraph, updateGraph } from "./lib/graph";
+  import { applyThemeColors, createGraph, relayout, updateGraph } from "./lib/graph";
   import { attachHoverTooltips } from "./lib/hover-tooltip";
   import {
     attachPositionPersistence,
+    clearPositions,
     getStorageKey,
     loadPositions,
   } from "./lib/positions";
@@ -35,7 +36,7 @@
   import Legend from "./components/Legend.svelte";
   import ServicePanel from "./components/ServicePanel.svelte";
   import HelpOverlay from "./components/HelpOverlay.svelte";
-  import { Map as MapIcon, Plus, Minus, Maximize2 } from "lucide-svelte";
+  import { Map as MapIcon, Plus, Minus, Maximize2, RotateCcw } from "lucide-svelte";
   import sampleJson from "./sample/infra.json?raw";
 
   let infra = $state<InfraJson | null>(null);
@@ -302,6 +303,12 @@
     cy.fit(undefined, 40);
   }
 
+  function resetLayout() {
+    if (!cy) return;
+    if (positionsKey) clearPositions(positionsKey);
+    relayout(cy);
+  }
+
   function exportSvg(exportTheme?: Theme) {
     if (!cy) return;
     downloadSvg(cy, `${infra?.meta.title ?? "inframap"}.svg`, exportTheme);
@@ -320,7 +327,12 @@
 <div class="layout">
   {#if infra}
     <header class="topbar">
-      <div class="title">{infra.meta.title}</div>
+      <div class="title">
+        <div class="title-name">{infra.meta.title}</div>
+        {#if infra.meta.description}
+          <div class="title-desc">{infra.meta.description}</div>
+        {/if}
+      </div>
       <SearchBar {infra} onMatch={onSearch} />
       <div class="controls">
         <Legend onPick={highlightByType} />
@@ -389,6 +401,7 @@
     <button onclick={() => zoomBy(1.25)} title={t("zoom.in")}><Plus size={18} /></button>
     <button onclick={() => zoomBy(0.8)} title={t("zoom.out")}><Minus size={18} /></button>
     <button onclick={fitGraph} title={t("zoom.fit")}><Maximize2 size={16} /></button>
+    <button onclick={resetLayout} title={t("zoom.reset")}><RotateCcw size={16} /></button>
     <button
       onclick={() => (showMinimap = !showMinimap)}
       title={t("zoom.minimap")}
@@ -420,9 +433,22 @@
     position: relative;
   }
   .title {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+  .title-name {
     font-weight: 600;
     font-size: 14px;
     color: var(--text);
+  }
+  .title-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .controls {
     display: flex;
