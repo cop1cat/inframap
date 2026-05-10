@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "inframap"
+version = "0.1.0"
+description = "YAML -> infra.json generator for the InfraMap viewer"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+    "click>=8.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "mypy>=1.10",
+    "types-PyYAML",
+    "pre-commit>=3.7",
+]
+
+[project.scripts]
+inframap = "inframap.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/inframap"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src/inframap"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

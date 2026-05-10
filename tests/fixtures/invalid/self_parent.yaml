@@ -1,0 +1,4 @@
+groups:
+  - id: a
+    label: A
+    parent: a

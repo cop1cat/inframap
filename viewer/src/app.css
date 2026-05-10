@@ -1,0 +1,109 @@
+:root {
+  --accent: #4f7cff;
+}
+
+:root[data-theme="light"] {
+  --bg: #fafbfc;
+  --text: #1a1d24;
+  --text-muted: #6b7280;
+  --panel-bg: #ffffff;
+  --panel-border: #e5e7eb;
+  --chip-bg: #f3f4f6;
+  --node-bg: #d1d5db;
+  --node-border: #9ca3af;
+  --group-bg: #f3f4f6;
+  --group-border: #d1d5db;
+  --edge-color: #6b7280;
+  --edge-muted: #9ca3af;
+  --broken-color: #ef4444;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0f1115;
+  --text: #e5e7eb;
+  --text-muted: #9ca3af;
+  --panel-bg: #181b22;
+  --panel-border: #2a2f3a;
+  --chip-bg: #232833;
+  --node-bg: #3a4252;
+  --node-border: #4a5468;
+  --group-bg: #1a1e26;
+  --group-border: #353b48;
+  --edge-color: #9ca3af;
+  --edge-muted: #6b7280;
+  --broken-color: #ff6b6b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.tt {
+  font-size: 12px;
+  line-height: 1.4;
+  max-width: 260px;
+  text-align: left;
+}
+.tt-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.tt-id {
+  font-family: ui-monospace, monospace;
+  font-size: 10.5px;
+  opacity: 0.65;
+  margin-bottom: 6px;
+}
+.tt-desc {
+  margin-bottom: 6px;
+}
+.tt-owner {
+  opacity: 0.85;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+.tt-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.tt-tag {
+  background: rgba(255, 255, 255, 0.12);
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10.5px;
+}
+.tt-tag b {
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+.inframap-drop-active::after {
+  content: "Drop infra.json";
+  position: fixed;
+  inset: 12px;
+  border: 2px dashed var(--accent);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--accent);
+  background: rgba(79, 124, 255, 0.05);
+  pointer-events: none;
+  z-index: 100;
+}

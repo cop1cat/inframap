@@ -1,0 +1,5 @@
+services:
+  - id: svc
+    label: A
+  - id: svc
+    label: B

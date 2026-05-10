@@ -1,0 +1,39 @@
+meta:
+  title: "My Infrastructure"
+  description: "Optional"
+
+groups:
+  - id: cloud
+    label: Cloud
+  - id: aws
+    label: AWS
+    parent: cloud
+    color: "#FF9900"
+
+services:
+  - id: api-gateway
+    label: API Gateway
+    group: aws
+    description: "Entry point"
+    owner: team-platform
+    tags:
+      tier: critical
+      layer: edge
+    links:
+      docs: https://docs.example.com/api-gateway
+      repo: https://github.com/org/api-gateway
+    calls:
+      - id: auth-service
+        type: sync
+      - id: billing-service
+        type: async
+  - id: auth-service
+    label: Auth
+    group: aws
+    description: "Auth"
+    owner: team-platform
+  - id: billing-service
+    label: Billing
+    group: aws
+    description: "Billing"
+    owner: team-billing

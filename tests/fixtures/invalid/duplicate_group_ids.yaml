@@ -1,0 +1,5 @@
+groups:
+  - id: g
+    label: A
+  - id: g
+    label: B

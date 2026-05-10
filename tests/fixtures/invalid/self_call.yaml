@@ -1,0 +1,6 @@
+services:
+  - id: a
+    label: A
+    calls:
+      - id: a
+        type: sync
