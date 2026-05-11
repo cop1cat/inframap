@@ -36,14 +36,19 @@
   import Legend from "./components/Legend.svelte";
   import ServicePanel from "./components/ServicePanel.svelte";
   import HelpOverlay from "./components/HelpOverlay.svelte";
-  import { Map as MapIcon, Plus, Minus, Maximize2, RotateCcw } from "lucide-svelte";
+  import { Map as MapIcon, Plus, Minus, Maximize2, RotateCcw, Menu as MenuIcon } from "lucide-svelte";
   import sampleJson from "./sample/infra.json?raw";
 
   let infra = $state<InfraJson | null>(null);
   let error = $state<string | null>(null);
   let theme = $state<Theme>(getInitialTheme());
-  let showStats = $state(true);
-  let showMinimap = $state(true);
+  const isNarrowInit =
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(max-width: 720px)").matches;
+  let showStats = $state(!isNarrowInit);
+  let showMinimap = $state(!isNarrowInit);
+  let mobileMenuOpen = $state(false);
   let shareNotice = $state<string | null>(null);
   let selectedServiceId = $state<string | null>(null);
   let anchor = $state<{ x: number; y: number; radius: number } | null>(null);
@@ -444,9 +449,18 @@
         {/if}
       </div>
       <SearchBar {infra} onMatch={onSearch} />
-      <div class="controls">
+      <button
+        class="burger"
+        onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
+        aria-label={t("topbar.menu")}
+        aria-expanded={mobileMenuOpen}
+        title={t("topbar.menu")}
+      >
+        <MenuIcon size={18} />
+      </button>
+      <div class="controls" class:open={mobileMenuOpen}>
         <Legend onPick={highlightByType} />
-        <button onclick={share} title={t("topbar.shareTitle")}>{t("topbar.share")}</button>
+        <button onclick={() => { share(); mobileMenuOpen = false; }} title={t("topbar.shareTitle")}>{t("topbar.share")}</button>
         <div class="export-wrap">
           <button onclick={() => (exportMenuOpen = !exportMenuOpen)} title={t("topbar.exportTitle")}>
             {t("topbar.export")} ▾
@@ -474,8 +488,8 @@
         <button onclick={() => (theme = theme === "dark" ? "light" : "dark")} title={t("topbar.themeTitle")}>
           {theme === "dark" ? "☀" : "☾"}
         </button>
-        <button onclick={() => (helpOpen = true)} title={t("topbar.help")}>?</button>
-        <button onclick={reset} title={t("topbar.clearTitle")}>×</button>
+        <button onclick={() => { helpOpen = true; mobileMenuOpen = false; }} title={t("topbar.help")}>?</button>
+        <button onclick={() => { reset(); mobileMenuOpen = false; }} title={t("topbar.clearTitle")}>×</button>
       </div>
       {#if shareNotice}
         <div class="notice">{shareNotice}</div>
@@ -579,6 +593,22 @@
     align-items: center;
     gap: 8px;
     margin-left: auto;
+  }
+  .burger {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    color: var(--text);
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: auto;
+  }
+  .burger:hover {
+    background: var(--chip-bg);
   }
   .controls button {
     background: transparent;
@@ -775,26 +805,41 @@
       padding: 8px 10px;
     }
     .title {
-      flex: 1 1 auto;
+      flex: 0 1 auto;
       min-width: 0;
+      max-width: 45%;
     }
     .title-name {
       font-size: 13px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .title-desc {
       display: none;
     }
-    .controls {
+    .burger {
+      display: inline-flex;
+      flex: 0 0 auto;
       order: 3;
+    }
+    .controls {
+      display: none;
+      order: 4;
       width: 100%;
       margin-left: 0;
       flex-wrap: wrap;
-      gap: 6px;
-      justify-content: flex-end;
+      gap: 8px;
+      justify-content: flex-start;
+      padding-top: 8px;
+      border-top: 1px solid var(--panel-border);
+    }
+    .controls.open {
+      display: flex;
     }
     .controls button {
-      padding: 6px 8px;
-      font-size: 12px;
+      padding: 8px 12px;
+      font-size: 13px;
     }
     .notice {
       bottom: -28px;

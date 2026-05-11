@@ -215,18 +215,24 @@
     border-radius: 8px;
     padding: 4px 6px;
     gap: 6px;
-    min-width: 600px;
+    flex: 1 1 360px;
+    min-width: 0;
     position: relative;
   }
   input[type="text"] {
-    flex: 1;
+    flex: 1 1 0;
     background: transparent;
     border: none;
     outline: none;
     color: var(--text);
     font-size: 13px;
     padding: 4px;
-    min-width: 240px;
+    min-width: 0;
+  }
+  @media (max-width: 720px) {
+    .search {
+      flex-basis: auto;
+    }
   }
   .filter {
     position: relative;

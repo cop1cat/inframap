@@ -32,6 +32,7 @@ const dict = {
     "topbar.themeTitle": "Toggle theme",
     "topbar.clearTitle": "Clear current graph",
     "topbar.langTitle": "Language",
+    "topbar.menu": "Menu",
 
     "export.current": "Current theme",
     "export.light": "Light",
@@ -119,6 +120,7 @@ const dict = {
     "topbar.themeTitle": "Сменить тему",
     "topbar.clearTitle": "Закрыть граф",
     "topbar.langTitle": "Язык",
+    "topbar.menu": "Меню",
 
     "export.current": "Текущая тема",
     "export.light": "Светлая",
