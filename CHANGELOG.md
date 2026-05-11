@@ -4,6 +4,33 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-05-11
+
+### Security
+
+- Sanitize service link `href`s to `http(s)`/`mailto` only — blocks `javascript:` XSS from crafted `infra.json` delivered via share links.
+- Cap gzip decompression of share-link payloads at 8 MB to refuse gzip-bomb input.
+- Whitelist `Service.kind` and `ServiceCall.type` before they reach Cytoscape class names.
+- `Content-Security-Policy` header in nginx config: `default-src 'self'`, no remote scripts, no inline JS, `frame-ancestors 'self'`, `form-action 'none'`.
+- Switch container image to `nginxinc/nginx-unprivileged` (runs as non-root on port 8080).
+
+### Fixed
+
+- Stats panel toggle: graph no longer becomes unresponsive after hiding/showing the panel (forced `cy.resize()` on toggle).
+- Share button: fall back to `execCommand("copy")` and a manual-copy modal when the Clipboard API is blocked (HTTP origin, lost focus, mobile).
+- Race where `positionsKey` resolved after `infra` was set, causing saved node positions to never load on first render.
+- Reload-with-new-JSON no longer leaks Cytoscape event listeners, `requestAnimationFrame` handles, animation intervals, or `window` mouse listeners.
+- `SearchBar` tag filter (`$derived` was returning a function, not the value).
+- Manual node positions stored in `localStorage` now use real LRU (timestamped) instead of lexical sort of hashes.
+
+### Changed
+
+- Responsive layout for mobile: topbar wraps, side panels become sheets, zoom controls reflow.
+- `<html lang>` and drop-zone overlay text now follow the active UI language.
+- Help overlay and share modal manage focus on open/close.
+- `vite.config.ts` `base` now configurable via `INFRAMAP_BASE` env (default `/`, set `./` for sub-path / GitHub Pages builds).
+- CLI emitter strips Pydantic's trailing slash from bare-host service link URLs.
+
 ## [0.2.0] - 2026-05-10
 
 ### Added
@@ -40,6 +67,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Helm chart at `deploy/helm/inframap-viewer/` (Deployment, Service, Ingress, HPA, optional NetworkPolicy).
 - GitHub Actions: CI (pytest, ruff, mypy, schema sync, viewer build), Pages deploy on `v*` tags, GHCR image build.
 
-[Unreleased]: https://github.com/cop1cat/inframap/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/cop1cat/inframap/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/cop1cat/inframap/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/cop1cat/inframap/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/cop1cat/inframap/releases/tag/v0.1.0

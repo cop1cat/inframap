@@ -12,6 +12,15 @@ def _call_dict(call: ServiceCall, broken: bool) -> dict[str, Any]:
     return {"id": call.id, "type": call.type.value, "broken": broken}
 
 
+def _link_str(url: Any) -> str:
+    # Pydantic HttpUrl normalizes bare hosts to include a trailing slash.
+    # Strip it for bare domains so users see the URL they wrote in the YAML.
+    s = str(url)
+    if s.endswith("/") and s.count("/") == 3:  # scheme://host/
+        s = s[:-1]
+    return s
+
+
 def _service_dict(s: Service, service_ids: set[str]) -> dict[str, Any]:
     return {
         "id": s.id,
@@ -21,7 +30,7 @@ def _service_dict(s: Service, service_ids: set[str]) -> dict[str, Any]:
         "description": s.description,
         "owner": s.owner,
         "tags": dict(s.tags),
-        "links": {k: str(v) for k, v in s.links.items()},
+        "links": {k: _link_str(v) for k, v in s.links.items()},
         "calls": [
             _call_dict(c, broken=c.id not in service_ids)
             for c in sorted(s.calls, key=lambda c: c.id)

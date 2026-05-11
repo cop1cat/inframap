@@ -1,7 +1,25 @@
 import cytoscape, { type Core, type ElementDefinition } from "cytoscape";
 import "./cy-extensions";
-import type { InfraJson, ServiceKind } from "../types";
+import type { CallType, InfraJson, ServiceKind } from "../types";
 import { KIND_STYLES, iconDataUri, styleForKind } from "./kinds";
+
+const KNOWN_CALL_TYPES: ReadonlySet<CallType> = new Set([
+  "sync",
+  "async",
+  "event",
+  "unknown",
+]);
+const KNOWN_KINDS: ReadonlySet<ServiceKind> = new Set([
+  "service",
+  "database",
+  "cache",
+  "queue",
+  "gateway",
+  "worker",
+  "external",
+  "storage",
+  "function",
+]);
 
 export function buildElements(infra: InfraJson): ElementDefinition[] {
   const elements: ElementDefinition[] = [];
@@ -22,7 +40,11 @@ export function buildElements(infra: InfraJson): ElementDefinition[] {
   }
 
   for (const s of infra.services) {
-    const kind: ServiceKind = (s.kind as ServiceKind | undefined) ?? "service";
+    const rawKind = (s.kind as string | undefined) ?? "service";
+    // Whitelist kind so a crafted JSON cannot inject arbitrary CSS class names.
+    const kind: ServiceKind = KNOWN_KINDS.has(rawKind as ServiceKind)
+      ? (rawKind as ServiceKind)
+      : "service";
     elements.push({
       group: "nodes",
       data: {
@@ -62,7 +84,11 @@ export function buildElements(infra: InfraJson): ElementDefinition[] {
 
   for (const s of infra.services) {
     for (const c of s.calls) {
-      const edgeClasses = [c.type as string];
+      // Whitelist call type — same XSS/CSS-injection concern as kind.
+      const type: CallType = KNOWN_CALL_TYPES.has(c.type as CallType)
+        ? (c.type as CallType)
+        : "unknown";
+      const edgeClasses: string[] = [type];
       if (c.broken) edgeClasses.push("broken");
       elements.push({
         group: "edges",
@@ -70,7 +96,7 @@ export function buildElements(infra: InfraJson): ElementDefinition[] {
           id: `${s.id}->${c.id}`,
           source: s.id,
           target: c.id,
-          type: c.type,
+          type,
           broken: c.broken,
         },
         classes: edgeClasses.join(" "),
@@ -324,10 +350,22 @@ export function createGraph(
   return cy;
 }
 
-export function updateGraph(cy: Core, infra: InfraJson): void {
+export function updateGraph(
+  cy: Core,
+  infra: InfraJson,
+  presetPositions?: Record<string, { x: number; y: number }>,
+): void {
   cy.elements().remove();
   cy.add(buildElements(infra));
-  cy.layout(layoutOptions).run();
+  if (presetPositions && Object.keys(presetPositions).length > 0) {
+    cy.nodes().forEach((n) => {
+      const p = presetPositions[n.id()];
+      if (p) n.position(p);
+    });
+    cy.fit(undefined, 30);
+  } else {
+    cy.layout(layoutOptions).run();
+  }
 }
 
 export function relayout(cy: Core): void {

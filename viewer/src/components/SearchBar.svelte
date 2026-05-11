@@ -21,7 +21,7 @@
   const groups = $derived(
     infra.groups.map((g) => ({ id: g.id, label: g.label })).sort((a, b) => a.label.localeCompare(b.label)),
   );
-  const tags = $derived(() => {
+  const tags = $derived.by(() => {
     const set = new Set<string>();
     for (const s of infra.services) {
       for (const [k, v] of Object.entries(s.tags)) set.add(`${k}:${v}`);
@@ -101,9 +101,20 @@
   const filterCount = $derived(
     selectedOwners.length + selectedGroups.length + selectedTags.length + selectedKinds.length,
   );
+
+  let rootEl: HTMLDivElement;
+
+  $effect(() => {
+    if (!openMenu) return;
+    const onDocMouseDown = (e: MouseEvent) => {
+      if (rootEl && !rootEl.contains(e.target as Node)) openMenu = null;
+    };
+    document.addEventListener("mousedown", onDocMouseDown);
+    return () => document.removeEventListener("mousedown", onDocMouseDown);
+  });
 </script>
 
-<div class="search">
+<div class="search" bind:this={rootEl}>
   <input
     type="text"
     placeholder={t("search.placeholder")}
@@ -160,13 +171,13 @@
     </button>
     {#if openMenu === "tag"}
       <div class="menu">
-        {#each tags() as tg}
+        {#each tags as tg}
           <label>
             <input type="checkbox" checked={selectedTags.includes(tg)} onchange={() => (selectedTags = toggle(selectedTags, tg))} />
             <code>{tg}</code>
           </label>
         {/each}
-        {#if tags().length === 0}<span class="empty">—</span>{/if}
+        {#if tags.length === 0}<span class="empty">—</span>{/if}
       </div>
     {/if}
   </div>

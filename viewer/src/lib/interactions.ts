@@ -1,11 +1,19 @@
-import type { Core, EdgeSingular, NodeSingular, SingularElementArgument } from "cytoscape";
+import type { Core, EdgeSingular, EventObject, NodeSingular, SingularElementArgument } from "cytoscape";
 
-let animationTimer: number | null = null;
+const ANIM_KEY = "_inframapAnimTimer";
+
+function getAnimTimer(cy: Core): number | null {
+  return (cy.scratch(ANIM_KEY) as number | null) ?? null;
+}
+function setAnimTimer(cy: Core, t: number | null): void {
+  cy.scratch(ANIM_KEY, t);
+}
 
 function stopAnimation(cy: Core): void {
-  if (animationTimer !== null) {
-    clearInterval(animationTimer);
-    animationTimer = null;
+  const t = getAnimTimer(cy);
+  if (t !== null) {
+    clearInterval(t);
+    setAnimTimer(cy, null);
   }
   cy.edges(".highlighted").style("line-dash-offset", 0);
 }
@@ -13,10 +21,11 @@ function stopAnimation(cy: Core): void {
 function startEdgeAnimation(cy: Core): void {
   stopAnimation(cy);
   let offset = 0;
-  animationTimer = window.setInterval(() => {
+  const id = window.setInterval(() => {
     offset = (offset - 4) % 1000;
     cy.edges(".highlighted").style("line-dash-offset", offset);
   }, 60);
+  setAnimTimer(cy, id);
 }
 
 export function clearHighlight(cy: Core): void {
@@ -46,7 +55,6 @@ export function highlightService(cy: Core, node: NodeSingular): void {
   const edges = node.connectedEdges();
   const neighbors = edges.connectedNodes();
   const set: SingularElementArgument[] = [node, ...edges.toArray(), ...neighbors.toArray()];
-  // include parent groups of node and its neighbours so they don't dim
   set.push(...ancestors(node));
   for (const n of neighbors.toArray() as NodeSingular[]) set.push(...ancestors(n));
   highlightSet(cy, set, node.id());
@@ -96,6 +104,7 @@ export function isHighlighted(cy: Core): boolean {
 }
 
 export function highlightByEdgeClass(cy: Core, edgeClass: string): void {
+  // edgeClass must be one of the known CallType values; caller (Legend) guarantees this.
   const edges = cy.edges(`.${edgeClass}`);
   if (edges.length === 0) {
     clearHighlight(cy);
@@ -111,8 +120,8 @@ export function highlightByEdgeClass(cy: Core, edgeClass: string): void {
   highlightSet(cy, focus.toArray());
 }
 
-export function attachInteractions(cy: Core): void {
-  cy.on("tap", (e) => {
+export function attachInteractions(cy: Core): () => void {
+  const onTap = (e: EventObject) => {
     const t = e.target;
     if (t === cy) {
       clearHighlight(cy);
@@ -124,14 +133,21 @@ export function attachInteractions(cy: Core): void {
     } else if (t.isEdge?.()) {
       highlightEdge(cy, t);
     }
-  });
+  };
+  cy.on("tap", onTap);
 
-  attachMiddleMousePan(cy);
+  const detachPan = attachMiddleMousePan(cy);
+
+  return () => {
+    cy.off("tap", onTap);
+    detachPan();
+    stopAnimation(cy);
+  };
 }
 
-function attachMiddleMousePan(cy: Core): void {
+function attachMiddleMousePan(cy: Core): () => void {
   const container = cy.container();
-  if (!container) return;
+  if (!container) return () => {};
 
   let panning = false;
   let lastX = 0;
@@ -159,7 +175,6 @@ function attachMiddleMousePan(cy: Core): void {
     panning = false;
     container.style.cursor = "";
   };
-  // suppress middle-click autoscroll
   const onAuxClick = (e: MouseEvent) => {
     if (e.button === 1) e.preventDefault();
   };
@@ -168,4 +183,12 @@ function attachMiddleMousePan(cy: Core): void {
   window.addEventListener("mousemove", onMove);
   window.addEventListener("mouseup", onUp);
   container.addEventListener("auxclick", onAuxClick);
+
+  return () => {
+    container.removeEventListener("mousedown", onDown);
+    window.removeEventListener("mousemove", onMove);
+    window.removeEventListener("mouseup", onUp);
+    container.removeEventListener("auxclick", onAuxClick);
+    container.style.cursor = "";
+  };
 }

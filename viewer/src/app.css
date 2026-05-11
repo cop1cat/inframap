@@ -93,7 +93,7 @@ body,
 }
 
 .inframap-drop-active::after {
-  content: "Drop infra.json";
+  content: var(--drop-label, "Drop infra.json");
   position: fixed;
   inset: 12px;
   border: 2px dashed var(--accent);
