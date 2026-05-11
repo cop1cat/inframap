@@ -4,7 +4,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
-## [0.2.2] - 2026-05-11
+## [0.2.3] - 2026-05-11
+
+### Changed
+
+- Mobile topbar (<=720px): controls (share, export, stats, language, theme, help, close, legend) collapsed behind a burger button so only title, search, and burger are visible at rest. Recovers ~70% of vertical space on phones.
+- `SearchBar` no longer enforces `min-width: 600px`; on narrow viewports the input shrinks instead of overflowing the topbar.
+- Minimap defaults to off on first load when viewport is <=720px (toggle still available in zoom controls).
 
 ### Fixed
 
@@ -75,7 +81,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Helm chart at `deploy/helm/inframap-viewer/` (Deployment, Service, Ingress, HPA, optional NetworkPolicy).
 - GitHub Actions: CI (pytest, ruff, mypy, schema sync, viewer build), Pages deploy on `v*` tags, GHCR image build.
 
-[Unreleased]: https://github.com/cop1cat/inframap/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/cop1cat/inframap/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/cop1cat/inframap/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/cop1cat/inframap/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/cop1cat/inframap/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/cop1cat/inframap/compare/v0.1.0...v0.2.0
