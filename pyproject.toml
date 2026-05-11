@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "inframap"
-version = "0.2.0"
+version = "0.2.1"
 description = "YAML -> infra.json generator for the InfraMap viewer"
 requires-python = ">=3.12"
 dependencies = [

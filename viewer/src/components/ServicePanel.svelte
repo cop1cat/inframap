@@ -12,7 +12,25 @@
   let { service, onClose, onJump, callerIds, anchor }: Props = $props();
 
   const tags = $derived(Object.entries(service.tags));
-  const links = $derived(Object.entries(service.links));
+
+  // Only http(s) and mailto schemes survive — anything else (javascript:, data:,
+  // file:, etc.) is dropped to prevent XSS via crafted infra.json from share links.
+  function safeHref(url: string): string | null {
+    try {
+      const u = new URL(url, window.location.href);
+      if (u.protocol === "http:" || u.protocol === "https:" || u.protocol === "mailto:") {
+        return u.toString();
+      }
+    } catch {
+      // not a valid URL — fall through
+    }
+    return null;
+  }
+  const links = $derived(
+    Object.entries(service.links)
+      .map(([k, v]) => ({ k, href: safeHref(v) }))
+      .filter((l): l is { k: string; href: string } => l.href !== null),
+  );
 
   const PANEL_W = 320;
   const PANEL_MAX_H = 480;
@@ -86,8 +104,8 @@
     <section>
       <h3>{t("service.links")}</h3>
       <ul class="links">
-        {#each links as [k, v]}
-          <li><a href={v} target="_blank" rel="noreferrer">{k}</a></li>
+        {#each links as l}
+          <li><a href={l.href} target="_blank" rel="noopener noreferrer">{l.k}</a></li>
         {/each}
       </ul>
     </section>
@@ -273,5 +291,16 @@
   code {
     font-family: ui-monospace, monospace;
     font-size: 12px;
+  }
+
+  @media (max-width: 720px) {
+    .panel {
+      left: 8px !important;
+      right: 8px !important;
+      top: auto !important;
+      bottom: 60px !important;
+      width: auto;
+      max-height: 60vh;
+    }
   }
 </style>

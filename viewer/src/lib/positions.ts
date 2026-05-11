@@ -3,9 +3,14 @@
 import type { Core } from "cytoscape";
 
 const KEY_PREFIX = "inframap.pos.";
-const MAX_ENTRIES = 16; // LRU cap
+const MAX_ENTRIES = 16;
 
 export type Positions = Record<string, { x: number; y: number }>;
+
+interface Stored {
+  ts: number;
+  positions: Positions;
+}
 
 async function hashJson(text: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(text));
@@ -19,19 +24,36 @@ export async function getStorageKey(jsonText: string): Promise<string> {
   return KEY_PREFIX + (await hashJson(jsonText));
 }
 
-export function loadPositions(key: string): Positions | null {
+function readStored(key: string): Stored | null {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return null;
-    return JSON.parse(raw) as Positions;
+    const parsed = JSON.parse(raw) as Stored | Positions;
+    // Back-compat: older entries were stored as bare Positions map.
+    if (parsed && typeof parsed === "object" && "positions" in parsed && "ts" in parsed) {
+      return parsed as Stored;
+    }
+    return { ts: 0, positions: parsed as Positions };
   } catch {
     return null;
   }
 }
 
+export function loadPositions(key: string): Positions | null {
+  const s = readStored(key);
+  if (!s) return null;
+  // Touch access time so this entry survives the next prune.
+  try {
+    localStorage.setItem(key, JSON.stringify({ ts: Date.now(), positions: s.positions }));
+  } catch {
+    // ignore quota
+  }
+  return s.positions;
+}
+
 export function savePositions(key: string, positions: Positions): void {
   try {
-    localStorage.setItem(key, JSON.stringify(positions));
+    localStorage.setItem(key, JSON.stringify({ ts: Date.now(), positions }));
     pruneOldEntries();
   } catch {
     // ignore quota
@@ -39,16 +61,21 @@ export function savePositions(key: string, positions: Positions): void {
 }
 
 function pruneOldEntries(): void {
-  const entries: string[] = [];
+  const entries: { key: string; ts: number }[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (k && k.startsWith(KEY_PREFIX)) entries.push(k);
+    if (!k || !k.startsWith(KEY_PREFIX)) continue;
+    const s = readStored(k);
+    entries.push({ key: k, ts: s?.ts ?? 0 });
   }
   if (entries.length <= MAX_ENTRIES) return;
-  // remove oldest by lexical order (no per-entry timestamp; good enough)
-  entries.sort();
-  for (const k of entries.slice(0, entries.length - MAX_ENTRIES)) {
-    localStorage.removeItem(k);
+  entries.sort((a, b) => a.ts - b.ts);
+  for (const e of entries.slice(0, entries.length - MAX_ENTRIES)) {
+    try {
+      localStorage.removeItem(e.key);
+    } catch {
+      // ignore
+    }
   }
 }
 
@@ -88,7 +115,10 @@ export function attachPositionPersistence(cy: Core, key: string): () => void {
   cy.on("position", "node", schedule);
   cy.on("free", "node", schedule);
   return () => {
-    if (timer !== null) clearTimeout(timer);
+    if (timer !== null) {
+      clearTimeout(timer);
+      timer = null;
+    }
     cy.off("position", "node", schedule);
     cy.off("free", "node", schedule);
   };

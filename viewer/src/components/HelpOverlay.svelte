@@ -5,13 +5,22 @@
     onClose: () => void;
   }
   let { onClose }: Props = $props();
+
+  let closeBtn: HTMLButtonElement | undefined;
+  let prevFocus: HTMLElement | null = null;
+
+  $effect(() => {
+    prevFocus = document.activeElement as HTMLElement | null;
+    closeBtn?.focus();
+    return () => prevFocus?.focus?.();
+  });
 </script>
 
 <button class="overlay" onclick={onClose} aria-label={t("service.close")}></button>
 <div class="card" role="dialog" aria-modal="true" tabindex="-1">
   <header>
     <h2>{t("help.title")}</h2>
-    <button class="close" onclick={onClose}>×</button>
+    <button bind:this={closeBtn} class="close" onclick={onClose} aria-label={t("service.close")}>×</button>
   </header>
 
     <section>

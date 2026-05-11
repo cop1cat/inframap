@@ -183,4 +183,16 @@
   code.broken {
     color: var(--broken-color);
   }
+
+  @media (max-width: 720px) {
+    .panel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(85vw, 320px);
+      box-shadow: -4px 0 16px rgba(0, 0, 0, 0.25);
+      z-index: 15;
+    }
+  }
 </style>

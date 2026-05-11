@@ -69,6 +69,8 @@ const dict = {
     "share.copied": "Link copied",
     "share.tooLarge": "Graph too large for URL. Share the JSON file directly.",
     "share.failed": "Share failed",
+    "share.copy": "Share link",
+    "share.manual": "Couldn't copy automatically. Select the link and copy it manually.",
 
     "zoom.in": "Zoom in",
     "zoom.out": "Zoom out",
@@ -154,6 +156,8 @@ const dict = {
     "share.copied": "Ссылка скопирована",
     "share.tooLarge": "Граф слишком большой для ссылки. Поделитесь JSON-файлом.",
     "share.failed": "Не удалось поделиться",
+    "share.copy": "Ссылка для шаринга",
+    "share.manual": "Не получилось скопировать автоматически. Выделите ссылку и скопируйте вручную.",
 
     "zoom.in": "Приблизить",
     "zoom.out": "Отдалить",

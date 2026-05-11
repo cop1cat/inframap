@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount, untrack } from "svelte";
-  import type { Core } from "cytoscape";
+  import type { Core, EventObject } from "cytoscape";
   import type { InfraJson } from "./types";
-  import { applyThemeColors, createGraph, relayout, updateGraph } from "./lib/graph";
+  import { applyThemeColors, createGraph, relayout } from "./lib/graph";
   import { attachHoverTooltips } from "./lib/hover-tooltip";
   import {
     attachPositionPersistence,
@@ -75,7 +75,16 @@
     document.documentElement.dataset.minimap = showMinimap ? "on" : "off";
   });
 
+  $effect(() => {
+    document.documentElement.lang = i18n.lang;
+    // Localized drop-zone overlay text — the CSS uses var(--drop-label) instead of
+    // a hardcoded English string so the message follows the active language.
+    document.documentElement.style.setProperty("--drop-label", `"${t("empty.drop")}"`);
+  });
+
   let positionsKey = $state<string | null>(null);
+  // Cleanup callbacks for everything attached to the current cy instance.
+  let cyTeardown: Array<() => void> = [];
 
   async function loadJson(text: string) {
     const { config, error: err } = tryParse(text);
@@ -83,85 +92,128 @@
       error = err ?? "Unknown error";
       return;
     }
+    // Resolve the positions key BEFORE swapping infra so the graph effect sees
+    // a key that matches the new JSON (avoids race where positions never load).
+    const key = await getStorageKey(text);
     error = null;
-    infra = config;
     lastJsonText = text;
+    positionsKey = key;
+    infra = config;
     saveToStorage(text);
-    positionsKey = await getStorageKey(text);
+  }
+
+  function destroyCy() {
+    for (const fn of cyTeardown) {
+      try {
+        fn();
+      } catch {
+        // best-effort teardown
+      }
+    }
+    cyTeardown = [];
+    if (cy) {
+      try {
+        cy.destroy();
+      } catch {
+        // ignore
+      }
+      cy = null;
+    }
+  }
+
+  function mountGraph(current: InfraJson, key: string | null) {
+    destroyCy();
+    const preset = key ? loadPositions(key) ?? undefined : undefined;
+    cy = createGraph(graphContainer, current, preset);
+    cyTeardown.push(attachInteractions(cy));
+    cyTeardown.push(attachHoverTooltips(cy));
+    if (key) cyTeardown.push(attachPositionPersistence(cy, key));
+
+    (cy as unknown as { navigator: (opts: object) => void }).navigator({
+      viewLiveFramerate: 30,
+      thumbnailEventFramerate: 10,
+      thumbnailLiveFramerate: 5,
+      dblClickDelay: 200,
+      removeCustomContainer: true,
+      rerenderDelay: 250,
+    });
+
+    const localCy = cy;
+    const onTap = (e: EventObject) => {
+      if (e.target === localCy) {
+        selectedServiceId = null;
+        anchor = null;
+        return;
+      }
+      const tgt = e.target;
+      if (tgt.isNode?.() && tgt.hasClass("service") && !tgt.hasClass("ghost")) {
+        selectedServiceId = tgt.id();
+        anchor = computeAnchor(tgt.id());
+      } else {
+        selectedServiceId = null;
+        anchor = null;
+      }
+    };
+    localCy.on("tap", onTap);
+
+    let anchorRaf = 0;
+    const scheduleAnchor = () => {
+      if (anchorRaf) return;
+      anchorRaf = requestAnimationFrame(() => {
+        anchorRaf = 0;
+        if (selectedServiceId) anchor = computeAnchor(selectedServiceId);
+      });
+    };
+    localCy.on("pan zoom", scheduleAnchor);
+    localCy.on("position", "node", scheduleAnchor);
+
+    cyTeardown.push(() => {
+      if (anchorRaf) {
+        cancelAnimationFrame(anchorRaf);
+        anchorRaf = 0;
+      }
+      localCy.off("tap", onTap);
+      localCy.off("pan zoom", scheduleAnchor);
+      localCy.off("position", "node", scheduleAnchor);
+    });
   }
 
   $effect(() => {
     const current = infra;
+    const key = positionsKey;
     if (!current || !graphContainer) return;
-    untrack(() => {
-      if (cy) {
-        updateGraph(cy, current);
-      } else {
-        const preset = positionsKey ? loadPositions(positionsKey) ?? undefined : undefined;
-        cy = createGraph(graphContainer, current, preset);
-        attachInteractions(cy);
-        attachHoverTooltips(cy);
-        if (positionsKey) attachPositionPersistence(cy, positionsKey);
-
-        (cy as unknown as { navigator: (opts: object) => void }).navigator({
-          viewLiveFramerate: 30,
-          thumbnailEventFramerate: 10,
-          thumbnailLiveFramerate: 5,
-          dblClickDelay: 200,
-          removeCustomContainer: true,
-          rerenderDelay: 250,
-        });
-        cy.on("tap", (e) => {
-          if (e.target === cy) {
-            selectedServiceId = null;
-            anchor = null;
-            return;
-          }
-          if (e.target.isNode?.() && e.target.hasClass("service") && !e.target.hasClass("ghost")) {
-            selectedServiceId = e.target.id();
-            anchor = computeAnchor(e.target.id());
-          } else {
-            selectedServiceId = null;
-            anchor = null;
-          }
-        });
-        // Throttle anchor recompute to avoid spam; recompute also on node drag.
-        let anchorRaf = 0;
-        const scheduleAnchor = () => {
-          if (anchorRaf) return;
-          anchorRaf = requestAnimationFrame(() => {
-            anchorRaf = 0;
-            if (selectedServiceId) anchor = computeAnchor(selectedServiceId);
-          });
-        };
-        cy.on("pan zoom", scheduleAnchor);
-        cy.on("position", "node", scheduleAnchor);
-      }
-    });
+    untrack(() => mountGraph(current, key));
   });
 
-  onMount(async () => {
-    attachDragAndDrop(document.body, {
+  onMount(() => {
+    const detachDnd = attachDragAndDrop(document.body, {
       onJson: (text) => loadJson(text),
       onError: (m) => (error = m),
     });
-    attachPaste({
+    const detachPaste = attachPaste({
       onJson: (text) => loadJson(text),
       onError: (m) => (error = m),
     });
 
-    try {
-      const fromHash = await loadFromHash();
-      if (fromHash) {
-        loadJson(fromHash);
-        return;
+    (async () => {
+      try {
+        const fromHash = await loadFromHash();
+        if (fromHash) {
+          await loadJson(fromHash);
+          return;
+        }
+      } catch (e) {
+        error = `Failed to decode shared link: ${(e as Error).message}`;
       }
-    } catch (e) {
-      error = `Failed to decode shared link: ${(e as Error).message}`;
-    }
+      const fromStorage = loadFromStorage();
+      if (fromStorage) await loadJson(fromStorage);
+    })();
 
-    const fromStorage = loadFromStorage();
-    if (fromStorage) loadJson(fromStorage);
+    return () => {
+      detachDnd();
+      detachPaste();
+      destroyCy();
+    };
   });
 
   $effect(() => {
@@ -172,7 +224,9 @@
         helpOpen = !helpOpen;
         e.preventDefault();
       } else if (e.key === "Escape") {
-        if (helpOpen) {
+        if (shareUrl) {
+          shareUrl = null;
+        } else if (helpOpen) {
           helpOpen = false;
         } else if (cy) {
           clearHighlight(cy);
@@ -255,6 +309,44 @@
     highlightFromStats(ids);
   }
 
+  let shareUrl = $state<string | null>(null);
+  let shareTextarea = $state<HTMLTextAreaElement | undefined>(undefined);
+
+  $effect(() => {
+    if (shareUrl && shareTextarea) {
+      shareTextarea.focus();
+      shareTextarea.select();
+    }
+  });
+
+  async function copyToClipboard(text: string): Promise<boolean> {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch {
+      // fall through to legacy path
+    }
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.top = "0";
+      ta.style.left = "0";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+
   async function share() {
     if (!lastJsonText) return;
     try {
@@ -262,14 +354,22 @@
       const url = buildShareUrl(encoded);
       if (url.length > 30000) {
         shareNotice = t("share.tooLarge");
+        setTimeout(() => (shareNotice = null), 3500);
         return;
       }
-      await navigator.clipboard.writeText(url);
-      window.history.replaceState(null, "", url);
-      shareNotice = `${t("share.copied")} (${(encoded.length / 1024).toFixed(1)} KB)`;
-      setTimeout(() => (shareNotice = null), 2500);
+      const ok = await copyToClipboard(url);
+      if (ok) {
+        // Only reflect the share URL in history after a successful copy, so the
+        // address bar stays consistent with what's actually on the clipboard.
+        window.history.replaceState(null, "", url);
+        shareNotice = `${t("share.copied")} (${(encoded.length / 1024).toFixed(1)} KB)`;
+        setTimeout(() => (shareNotice = null), 2500);
+      } else {
+        shareUrl = url;
+      }
     } catch (e) {
       shareNotice = `${t("share.failed")}: ${(e as Error).message}`;
+      setTimeout(() => (shareNotice = null), 3500);
     }
   }
 
@@ -315,12 +415,22 @@
     exportMenuOpen = false;
   }
 
+  function toggleStats() {
+    showStats = !showStats;
+    // Cytoscape doesn't observe container size changes; force a resize so the
+    // canvas matches the new flex width and the graph stays interactive.
+    requestAnimationFrame(() => cy?.resize());
+  }
+
   function reset() {
-    if (cy) clearHighlight(cy);
+    destroyCy();
     infra = null;
     lastJsonText = "";
-    cy?.destroy();
-    cy = null;
+    positionsKey = null;
+    selectedServiceId = null;
+    anchor = null;
+    lastHighlightKey = "";
+    error = null;
   }
 </script>
 
@@ -349,7 +459,7 @@
             </div>
           {/if}
         </div>
-        <button onclick={() => (showStats = !showStats)} title={t("topbar.statsTitle")}>{t("topbar.stats")}</button>
+        <button onclick={toggleStats} title={t("topbar.statsTitle")} class:active={showStats}>{t("topbar.stats")}</button>
         <div class="export-wrap">
           <button onclick={() => (langMenuOpen = !langMenuOpen)} title={t("topbar.langTitle")}>
             🌐 {i18n.lang === "ru" ? "Русский" : "English"} ▾
@@ -371,6 +481,20 @@
         <div class="notice">{shareNotice}</div>
       {/if}
     </header>
+  {/if}
+
+  {#if shareUrl}
+    <div class="share-modal">
+      <button type="button" class="share-backdrop" aria-label="Close" onclick={() => (shareUrl = null)}></button>
+      <div class="share-card" role="dialog" aria-modal="true" aria-label={t("share.copy")}>
+        <div class="share-head">
+          <strong>{t("share.copy")}</strong>
+          <button type="button" class="share-close" onclick={() => (shareUrl = null)} aria-label="Close">×</button>
+        </div>
+        <p class="share-hint">{t("share.manual")}</p>
+        <textarea bind:this={shareTextarea} readonly value={shareUrl} onfocus={(e) => (e.currentTarget as HTMLTextAreaElement).select()}></textarea>
+      </div>
+    </div>
   {/if}
 
   <main class="main">
@@ -467,6 +591,11 @@
   }
   .controls button:hover {
     background: var(--chip-bg);
+  }
+  .controls button.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
   }
   .export-wrap {
     position: relative;
@@ -575,5 +704,120 @@
   }
   :global(.cytoscape-navigatorBg) {
     opacity: 1 !important;
+  }
+
+  .share-modal {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    z-index: 2000;
+    padding: 16px;
+  }
+  .share-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    border: none;
+    cursor: pointer;
+  }
+  .share-card {
+    position: relative;
+  }
+  .share-card {
+    background: var(--panel-bg);
+    color: var(--text);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 16px;
+    width: min(560px, 100%);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  }
+  .share-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .share-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 22px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+  .share-hint {
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .share-card textarea {
+    width: 100%;
+    height: 96px;
+    box-sizing: border-box;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    padding: 8px;
+    font-family: ui-monospace, monospace;
+    font-size: 12px;
+    resize: vertical;
+  }
+
+  @media (max-width: 720px) {
+    .topbar {
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px 10px;
+    }
+    .title {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .title-name {
+      font-size: 13px;
+    }
+    .title-desc {
+      display: none;
+    }
+    .controls {
+      order: 3;
+      width: 100%;
+      margin-left: 0;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+    .controls button {
+      padding: 6px 8px;
+      font-size: 12px;
+    }
+    .notice {
+      bottom: -28px;
+      right: 8px;
+      left: 8px;
+      text-align: center;
+    }
+    .zoom-controls {
+      bottom: 12px;
+      left: 12px;
+      flex-direction: row;
+    }
+    .zoom-controls button {
+      width: 34px;
+      height: 34px;
+    }
+    :global(.cytoscape-navigator) {
+      width: 130px !important;
+      height: 90px !important;
+      top: auto !important;
+      bottom: 60px !important;
+      right: 12px !important;
+      left: auto !important;
+    }
   }
 </style>

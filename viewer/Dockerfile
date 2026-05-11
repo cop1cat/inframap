@@ -9,10 +9,11 @@ COPY . .
 RUN bun run build
 
 # --- runtime ---
-FROM nginx:alpine
+# nginxinc/nginx-unprivileged runs as non-root on port 8080 by default.
+FROM nginxinc/nginx-unprivileged:alpine
 
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
-HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://localhost/ >/dev/null || exit 1
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://localhost:8080/ >/dev/null || exit 1
