@@ -30,6 +30,10 @@ jobs:
 
       - name: Build viewer
         working-directory: viewer
+        env:
+          # GitHub Pages serves project sites under /<repo>/, so asset URLs
+          # in index.html must be prefixed accordingly.
+          INFRAMAP_BASE: /${{ github.event.repository.name }}/
         run: bun run build
 
       - name: Publish JSON Schema alongside the viewer
