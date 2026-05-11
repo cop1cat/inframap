@@ -4,6 +4,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-05-12
+
+### Fixed
+
+- Stats panel did not reappear after being closed: cytoscape canvases gave the `.graph` flex item a large intrinsic min-size, preventing `StatsPanel` from claiming its 280px on remount. Added `min-width: 0` and `overflow: hidden` to `.graph`.
+- "Drop infra.json here" overlay could get stuck on screen when a drag was cancelled or left the window. `attachDragAndDrop` now uses a dragenter/dragleave depth counter and clears on `dragend`/window `blur`.
+
+### Changed
+
+- Mobile topbar (<=720px): title and burger now share one row; `SearchBar` drops to its own full-width row and filter chips (owner/group/tag/kind) wrap below the input instead of squeezing it.
+
 ## [0.2.3] - 2026-05-11
 
 ### Changed
@@ -81,7 +92,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Helm chart at `deploy/helm/inframap-viewer/` (Deployment, Service, Ingress, HPA, optional NetworkPolicy).
 - GitHub Actions: CI (pytest, ruff, mypy, schema sync, viewer build), Pages deploy on `v*` tags, GHCR image build.
 
-[Unreleased]: https://github.com/cop1cat/inframap/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/cop1cat/inframap/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/cop1cat/inframap/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/cop1cat/inframap/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/cop1cat/inframap/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/cop1cat/inframap/compare/v0.2.0...v0.2.1

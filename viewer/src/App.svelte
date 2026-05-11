@@ -677,7 +677,9 @@
   }
   .graph {
     flex: 1;
+    min-width: 0;
     height: 100%;
+    overflow: hidden;
     background: var(--bg);
   }
   .zoom-controls {
@@ -805,9 +807,15 @@
       padding: 8px 10px;
     }
     .title {
-      flex: 0 1 auto;
+      flex: 1 1 0;
       min-width: 0;
-      max-width: 45%;
+      max-width: none;
+      order: 1;
+    }
+    :global(.topbar > .search) {
+      order: 3;
+      flex: 1 1 100%;
+      flex-wrap: wrap;
     }
     .title-name {
       font-size: 13px;
@@ -821,7 +829,8 @@
     .burger {
       display: inline-flex;
       flex: 0 0 auto;
-      order: 3;
+      order: 2;
+      margin-left: 0;
     }
     .controls {
       display: none;
