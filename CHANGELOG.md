@@ -4,6 +4,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-05-12
+
+### Fixed
+
+- Mobile horizontal overflow: `Legend` rendered as a single non-wrapping flex row wider than narrow viewports, pushing the entire topbar past the screen edge. `Legend` now wraps and uses tighter spacing on <=720px, and `.layout` clips stray horizontal overflow.
+
 ## [0.2.4] - 2026-05-12
 
 ### Fixed
@@ -92,7 +98,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Helm chart at `deploy/helm/inframap-viewer/` (Deployment, Service, Ingress, HPA, optional NetworkPolicy).
 - GitHub Actions: CI (pytest, ruff, mypy, schema sync, viewer build), Pages deploy on `v*` tags, GHCR image build.
 
-[Unreleased]: https://github.com/cop1cat/inframap/compare/v0.2.4...HEAD
+[Unreleased]: https://github.com/cop1cat/inframap/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/cop1cat/inframap/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/cop1cat/inframap/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/cop1cat/inframap/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/cop1cat/inframap/compare/v0.2.1...v0.2.2

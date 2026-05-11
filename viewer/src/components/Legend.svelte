@@ -16,6 +16,7 @@
 <style>
   .legend {
     display: flex;
+    flex-wrap: wrap;
     gap: 4px;
     align-items: center;
     padding: 4px 6px;
@@ -24,6 +25,14 @@
     border-radius: 8px;
     font-size: 12px;
     color: var(--text-muted);
+  }
+  @media (max-width: 720px) {
+    .line {
+      width: 18px;
+    }
+    .row {
+      padding: 2px 6px;
+    }
   }
   .row {
     display: flex;
