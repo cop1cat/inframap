@@ -232,6 +232,16 @@
   @media (max-width: 720px) {
     .search {
       flex-basis: auto;
+      flex-wrap: wrap;
+    }
+    input[type="text"] {
+      flex: 1 1 100%;
+      order: -1;
+      padding: 6px 4px;
+    }
+    .filter > button {
+      padding: 4px 10px;
+      font-size: 12px;
     }
   }
   .filter {

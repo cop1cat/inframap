@@ -42,16 +42,27 @@ export interface LoadCallbacks {
 }
 
 export function attachDragAndDrop(target: HTMLElement, cb: LoadCallbacks): () => void {
-  const onDragOver = (e: DragEvent) => {
+  let depth = 0;
+  const clear = () => {
+    depth = 0;
+    target.classList.remove("inframap-drop-active");
+  };
+  const onDragEnter = (e: DragEvent) => {
     e.preventDefault();
+    depth++;
     target.classList.add("inframap-drop-active");
   };
+  const onDragOver = (e: DragEvent) => {
+    e.preventDefault();
+  };
   const onDragLeave = (e: DragEvent) => {
-    if (e.target === target) target.classList.remove("inframap-drop-active");
+    depth--;
+    // relatedTarget === null means the cursor left the window entirely
+    if (depth <= 0 || e.relatedTarget === null) clear();
   };
   const onDrop = async (e: DragEvent) => {
     e.preventDefault();
-    target.classList.remove("inframap-drop-active");
+    clear();
     const file = e.dataTransfer?.files?.[0];
     if (!file) return;
     try {
@@ -62,14 +73,20 @@ export function attachDragAndDrop(target: HTMLElement, cb: LoadCallbacks): () =>
     }
   };
 
+  target.addEventListener("dragenter", onDragEnter);
   target.addEventListener("dragover", onDragOver);
   target.addEventListener("dragleave", onDragLeave);
   target.addEventListener("drop", onDrop);
+  window.addEventListener("dragend", clear);
+  window.addEventListener("blur", clear);
 
   return () => {
+    target.removeEventListener("dragenter", onDragEnter);
     target.removeEventListener("dragover", onDragOver);
     target.removeEventListener("dragleave", onDragLeave);
     target.removeEventListener("drop", onDrop);
+    window.removeEventListener("dragend", clear);
+    window.removeEventListener("blur", clear);
   };
 }
 
